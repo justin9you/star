@@ -158,6 +158,7 @@ star/
 
 ## 文档
 
+- [安装部署指南](INSTALL-GUIDE.md) - 普通电脑从零开始安装教程
 - [产品需求文档 (PRD)](PRD.md)
 - [项目创建指南](PROJECT-CREATION.md)
 
