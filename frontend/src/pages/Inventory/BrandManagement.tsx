@@ -70,13 +70,13 @@ export default function BrandManagement() {
 
   const columns = [
     { title: 'ID', dataIndex: 'id', key: 'id', width: 60 },
-    { title: '品牌名称', dataIndex: 'name', key: 'name' },
-    { title: '品牌编码', dataIndex: 'code', key: 'code' },
+    { title: '品牌名称', dataIndex: 'name', key: 'name', width: 120 },
+    { title: '品牌编码', dataIndex: 'code', key: 'code', width: 100 },
     {
       title: '状态', dataIndex: 'status', key: 'status', width: 100,
       render: (status: boolean) => status ? '启用' : '禁用'
     },
-    { title: '备注', dataIndex: 'remark', key: 'remark', ellipsis: true },
+    { title: '备注', dataIndex: 'remark', key: 'remark', width: 120, ellipsis: true },
     {
       title: '操作', key: 'action', width: 150,
       render: (_: unknown, record: Brand) => (

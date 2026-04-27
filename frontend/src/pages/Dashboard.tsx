@@ -3,6 +3,7 @@ import { Card, Row, Col, Statistic, Table, Alert, Spin } from 'antd'
 import { ShoppingCartOutlined, DollarOutlined, TeamOutlined, AlertOutlined } from '@ant-design/icons'
 import { reportApi } from '../services/reportApi'
 import { inventoryApi } from '../services/inventoryApi'
+import { usePrivacyStore } from '../stores/privacyStore'
 import type { Inventory } from '../types/inventory'
 
 interface DailySales {
@@ -15,6 +16,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true)
   const [dailySales, setDailySales] = useState<DailySales | null>(null)
   const [lowStockList, setLowStockList] = useState<Inventory[]>([])
+  const { isPrivacyMode } = usePrivacyStore()
 
   useEffect(() => {
     loadData()
@@ -67,9 +69,9 @@ export default function Dashboard() {
               <Card>
                 <Statistic
                   title="今日销售额"
-                  value={dailySales?.total_amount || 0}
-                  prefix={<DollarOutlined />}
-                  precision={2}
+                  value={isPrivacyMode ? '***' : (dailySales?.total_amount || 0)}
+                  prefix={isPrivacyMode ? '' : <DollarOutlined />}
+                  precision={isPrivacyMode ? undefined : 2}
                 />
               </Card>
             </Col>

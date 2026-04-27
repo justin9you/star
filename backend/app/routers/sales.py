@@ -9,6 +9,7 @@ from app.schemas.sales import (
     SalesOrderCreate, SalesOrderUpdate, SalesOrderResponse
 )
 from app.services import sales as sales_service
+from app.services import inventory as inventory_service
 from app.services.auth import get_current_user
 from app.models.user import User
 
@@ -172,9 +173,6 @@ async def get_order(order_id: int, db: Session = Depends(get_db)):
     })
 
 
-from app.services import inventory as inventory_service
-
-
 @router.post("/orders/{order_id}/cancel", response_model=ResponseModel)
 async def cancel_order(order_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     try:
@@ -212,14 +210,29 @@ async def print_order(order_id: int, db: Session = Depends(get_db)):
     print_items = []
     for i in o.items:
         product_name = i.product_name or ""
+        product_spec = i.product_spec or ""
+        product_unit = i.product_unit or ""
         if not product_name:
             product = inventory_service.get_product(db, i.product_id)
             product_name = product.name if product else ""
+            product_spec = product.spec if product else ""
+            product_unit = product.unit if product else ""
         print_items.append({
             "product_name": product_name,
+            "product_spec": product_spec,
+            "product_unit": product_unit,
             "quantity": i.quantity,
             "unit_price": float(i.unit_price),
             "subtotal": float(i.subtotal)
+        })
+
+    old_appliances = []
+    for oa in o.old_appliances:
+        old_appliances.append({
+            "category": oa.category,
+            "brand": oa.brand or "",
+            "condition": oa.condition or "",
+            "recycle_price": float(oa.recycle_price)
         })
 
     return ResponseModel(data={
@@ -231,8 +244,10 @@ async def print_order(order_id: int, db: Session = Depends(get_db)):
         "customer_phone": customer_phone,
         "customer_address": customer_address,
         "items": print_items,
+        "old_appliances": old_appliances,
         "total_amount": float(o.total_amount),
         "discount_amount": float(o.discount_amount),
         "final_amount": float(o.final_amount),
+        "remark": o.remark or "",
         "created_at": o.created_at.strftime("%Y-%m-%d %H:%M:%S")
     })

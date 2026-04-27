@@ -17,7 +17,7 @@ if not exist ".env" (
 
 REM 启动后端（在新窗口）
 echo [1/2] 启动后端服务...
-start "亚星电子 - 后端服务" cmd /k "cd backend && pip install -r requirements.txt && uvicorn app.main:app --reload --host 127.0.0.1 --port 8000"
+start "亚星电子 - 后端服务" cmd /k "cd backend && pip install -r requirements.txt && uvicorn app.main:app --reload --host 127.0.0.1 --port 8001"
 
 REM 等待后端启动
 timeout /t 5 /nobreak >nul
@@ -29,8 +29,8 @@ start "亚星电子 - 前端服务" cmd /k "cd frontend && pnpm install && pnpm 
 echo.
 echo ===================================
 echo 开发环境已启动！
-echo 后端地址: http://127.0.0.1:8000
-echo 前端地址: http://localhost:5173
-echo API 文档: http://127.0.0.1:8000/docs
+echo 后端地址: http://127.0.0.1:8001
+echo 前端地址: http://localhost:8082
+echo API 文档: http://127.0.0.1:8001/docs
 echo ===================================
 pause

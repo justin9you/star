@@ -10,10 +10,14 @@ import {
   EyeOutlined,
   EyeInvisibleOutlined,
   FormOutlined,
+  LockOutlined,
+  UnlockOutlined,
 } from '@ant-design/icons'
 import { useNavigate, useLocation } from 'react-router-dom'
+import { useEffect } from 'react'
 import { useAuthStore } from '../../stores/authStore'
 import { useElderModeStore } from '../../stores/elderModeStore'
+import { usePrivacyStore } from '../../stores/privacyStore'
 import styles from './MainLayout.module.css'
 
 const { Sider, Content, Header } = Layout
@@ -71,6 +75,16 @@ export default function MainLayout() {
   const location = useLocation()
   const { isLoggedIn } = useAuthStore()
   const { isElderMode, toggleElderMode } = useElderModeStore()
+  const { isPrivacyMode, togglePrivacyMode } = usePrivacyStore()
+
+  // 同步关爱版类名到 body（Modal 等 Portal 组件渲染在 body 下）
+  useEffect(() => {
+    if (isElderMode) {
+      document.body.classList.add('elder-mode')
+    } else {
+      document.body.classList.remove('elder-mode')
+    }
+  }, [isElderMode])
 
   if (!isLoggedIn) {
     return <Navigate to="/login" replace />
@@ -120,6 +134,17 @@ export default function MainLayout() {
             <span className={styles.title}>亚星电子销售管理系统</span>
           </div>
           <div className={styles.headerRight}>
+            <Tooltip title={isPrivacyMode ? '显示敏感信息（复盘模式）' : '隐藏敏感信息（客户在场）'}>
+              <Button
+                type="text"
+                icon={isPrivacyMode ? <LockOutlined /> : <UnlockOutlined />}
+                onClick={togglePrivacyMode}
+                className={styles.elderBtn}
+                danger={!isPrivacyMode}
+              >
+                {isPrivacyMode ? '隐私' : '复盘'}
+              </Button>
+            </Tooltip>
             <Tooltip title={isElderMode ? '切换标准版' : '切换关爱版（大字体）'}>
               <Button
                 type="text"

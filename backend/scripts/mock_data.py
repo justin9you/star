@@ -298,7 +298,7 @@ def create_sales_orders(db: Session, products, customers, warehouses):
                 discount_amount=Decimal(str(random.choice([0, 50, 100, 150, 200]))),
                 final_amount=Decimal("0"),
                 payment_status=random.choice([PaymentStatus.PAID.value, PaymentStatus.UNPAID.value]),
-                status=OrderStatus.ACTIVE.value,
+                status=random.choice([OrderStatus.ACTIVE.value, OrderStatus.ACTIVE.value, OrderStatus.ACTIVE.value, OrderStatus.CANCELLED.value]),
                 created_at=order_date,
             )
             db.add(order)

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Card, Table, Button, Modal, Descriptions, Tag, Space, Input, Select, message, Popconfirm, DatePicker } from 'antd'
+import { Card, Table, Button, Modal, Descriptions, Tag, Space, Input, Select, message, DatePicker } from 'antd'
 import { EyeOutlined, PrinterOutlined } from '@ant-design/icons'
 import { useSearchParams } from 'react-router-dom'
 import dayjs from 'dayjs'
@@ -7,13 +7,13 @@ import { salesApi } from '../../services/salesApi'
 import type { SalesOrder, SalesOrderItem } from '../../types/sales'
 
 const PAYMENT_STATUS_MAP: Record<string, { color: string; text: string }> = {
-  unpaid: { color: 'red', text: '未付款' },
-  paid: { color: 'green', text: '已付款' },
+  '未付款': { color: 'red', text: '未付款' },
+  '已付款': { color: 'green', text: '已付款' },
 }
 
 const ORDER_STATUS_MAP: Record<string, { color: string; text: string }> = {
-  normal: { color: 'blue', text: '正常' },
-  cancelled: { color: 'default', text: '已作废' },
+  '有效': { color: 'blue', text: '正常' },
+  '已作废': { color: 'default', text: '已作废' },
 }
 
 // 数字转大写金额
@@ -127,6 +127,17 @@ export default function OrderList() {
     }
   }
 
+  const confirmCancel = (orderId: number) => {
+    Modal.confirm({
+      title: '确认作废',
+      content: '确定要作废该订单吗？作废后不可恢复。',
+      okText: '作废',
+      okButtonProps: { danger: true },
+      cancelText: '取消',
+      onOk: () => handleCancel(orderId),
+    })
+  }
+
   const handleCancel = async (orderId: number) => {
     try {
       await salesApi.cancelOrder(orderId)
@@ -135,6 +146,16 @@ export default function OrderList() {
     } catch {
       message.error('作废失败')
     }
+  }
+
+  const confirmMarkPaid = (orderId: number) => {
+    Modal.confirm({
+      title: '确认收款',
+      content: '确定将该订单标记为已付款吗？',
+      okText: '确认收款',
+      cancelText: '取消',
+      onOk: () => handleMarkPaid(orderId),
+    })
   }
 
   const handleMarkPaid = async (orderId: number) => {
@@ -147,41 +168,163 @@ export default function OrderList() {
     }
   }
 
+  const confirmPrint = (orderId: number) => {
+    Modal.confirm({
+      title: '确认打印',
+      content: '确定要打印该订单吗？',
+      okText: '打印',
+      cancelText: '取消',
+      onOk: () => handlePrint(orderId),
+    })
+  }
+
   const handlePrint = async (orderId: number) => {
     try {
       const res = await salesApi.printOrder(orderId)
       if (res.data) {
-        const printData = res.data as Record<string, unknown>
+        const d = res.data as Record<string, unknown>
+        const items = (d.items as Array<{ product_name: string; product_spec?: string; product_unit?: string; quantity: number; unit_price: number; subtotal: number }>) || []
+        const oldItems = (d.old_appliances as Array<{ category: string; brand?: string; condition?: string; recycle_price: number }>) || []
         const printWindow = window.open('', '_blank')
         if (printWindow) {
-          const items = (printData.items as Array<{ product_name: string; quantity: number; unit_price: number; subtotal: number }>) || []
           printWindow.document.write(`
-            <html><head><title>销售单</title><style>
-              body { font-family: SimSun; font-size: 14px; max-width: 400px; margin: 0 auto; padding: 20px; }
-              h2 { text-align: center; } table { width: 100%; border-collapse: collapse; }
-              th, td { border: 1px solid #000; padding: 4px 8px; text-align: left; font-size: 12px; }
-              .total { text-align: right; margin-top: 10px; } .footer { margin-top: 20px; font-size: 12px; }
-            </style></head><body>
-            <h2>${printData.shop_name || ''}</h2>
-            <p>地址：${printData.shop_address || ''}</p>
-            <p>电话：${printData.shop_phone || ''}</p>
-            <hr/>
-            <p>单号：${printData.order_no || ''}</p>
-            <p>客户：${printData.customer_name || ''}</p>
-            <p>电话：${printData.customer_phone || ''}</p>
-            <p>地址：${printData.customer_address || ''}</p>
-            <table><tr><th>商品</th><th>数量</th><th>单价</th><th>小计</th></tr>
-            ${items.map(i => `<tr><td>${i.product_name}</td><td>${i.quantity}</td><td>¥${i.unit_price}</td><td>¥${i.subtotal}</td></tr>`).join('')}
-            </table>
-            <p class="total">商品总额：¥${printData.total_amount}</p>
-            <p class="total">优惠：¥${printData.discount_amount}</p>
-            <p class="total"><strong>实收：¥${printData.final_amount}</strong></p>
-            <p class="total"><strong>大写：${numberToChinese(Number(printData.final_amount) || 0)}</strong></p>
-            <p class="footer">开单时间：${printData.created_at}</p>
-            </body></html>
+<!DOCTYPE html>
+<html><head><title>收据 - ${d.order_no || ''}</title>
+<style>
+  @page { size: A4; margin: 15mm; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: "SimSun", "Microsoft YaHei", serif; font-size: 14px; color: #000; }
+  .receipt { width: 100%; max-width: 680px; margin: 0 auto; border: 2px solid #000; padding: 0; }
+  .title-bar { text-align: center; padding: 16px 20px 12px; border-bottom: 2px solid #000; }
+  .title-bar h1 { font-size: 22px; font-weight: bold; letter-spacing: 8px; }
+  .title-bar .sub { font-size: 12px; margin-top: 4px; color: #333; }
+  .body { padding: 12px 20px; }
+  .info-row { display: flex; line-height: 2; font-size: 14px; }
+  .info-row .label { width: 70px; text-align: justify; text-align-last: justify; flex-shrink: 0; }
+  .info-row .value { flex: 1; border-bottom: 1px solid #000; margin-left: 4px; padding: 0 4px; min-width: 0; }
+  .info-row .value-half { width: 48%; border-bottom: 1px solid #000; margin-left: 4px; padding: 0 4px; }
+  .info-group { display: flex; gap: 24px; }
+  .items-title { font-size: 14px; font-weight: bold; margin: 12px 0 6px; }
+  .items-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .items-table th, .items-table td { border: 1px solid #000; padding: 5px 8px; text-align: center; }
+  .items-table th { background: #f5f5f5; font-weight: bold; }
+  .items-table .name-col { text-align: left; width: 35%; }
+  .items-table .num-col { width: 12%; }
+  .items-table .price-col { width: 16%; text-align: right; }
+  .items-table .sub-col { width: 16%; text-align: right; }
+  .amount-section { margin-top: 12px; border: 1px solid #000; }
+  .amount-row { display: flex; border-bottom: 1px solid #000; line-height: 2.2; font-size: 14px; }
+  .amount-row:last-child { border-bottom: none; }
+  .amount-row .a-label { width: 100px; text-align: center; border-right: 1px solid #000; flex-shrink: 0; font-weight: bold; }
+  .amount-row .a-value { flex: 1; padding: 0 12px; text-align: right; }
+  .amount-row.highlight { background: #f5f5f5; }
+  .amount-row.highlight .a-value { font-size: 16px; font-weight: bold; }
+  .cn-amount-row { display: flex; line-height: 2.2; font-size: 14px; border: 1px solid #000; border-top: none; }
+  .cn-amount-row .a-label { width: 100px; text-align: center; border-right: 1px solid #000; flex-shrink: 0; font-weight: bold; }
+  .cn-amount-row .a-value { flex: 1; padding: 0 12px; }
+  .old-section { margin-top: 12px; }
+  .old-section .section-title { font-size: 14px; font-weight: bold; margin-bottom: 6px; }
+  .old-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .old-table th, .old-table td { border: 1px solid #000; padding: 4px 8px; text-align: center; }
+  .old-table th { background: #f5f5f5; font-weight: bold; }
+  .old-table .price-col { text-align: right; }
+  .remark-row { display: flex; margin-top: 12px; line-height: 2; font-size: 14px; }
+  .remark-row .label { width: 70px; text-align: justify; text-align-last: justify; flex-shrink: 0; }
+  .remark-row .value { flex: 1; border-bottom: 1px solid #000; margin-left: 4px; padding: 0 4px; }
+  .sign-section { margin-top: 32px; display: flex; justify-content: space-between; font-size: 14px; }
+  .sign-section .sign-item { width: 45%; }
+  .sign-section .sign-line { border-bottom: 1px solid #000; display: inline-block; width: 120px; margin-left: 8px; }
+  .footer { margin-top: 24px; padding-top: 8px; border-top: 1px solid #000; display: flex; justify-content: space-between; font-size: 12px; color: #333; }
+  @media print { body { width: 100%; } .receipt { border: 2px solid #000; } }
+</style>
+</head><body>
+<div class="receipt">
+  <div class="title-bar">
+    <h1>收 据</h1>
+    <div class="sub">${d.shop_name || '亚星电子经营部'}${d.shop_address ? '　|　' + d.shop_address : ''}${d.shop_phone ? '　|　' + d.shop_phone : ''}</div>
+  </div>
+  <div class="body">
+    <div class="info-group">
+      <div class="info-row" style="width:48%">
+        <span class="label">客户</span>
+        <span class="value-half">${d.customer_name || ''}</span>
+      </div>
+      <div class="info-row" style="width:48%">
+        <span class="label">单号</span>
+        <span class="value-half">${d.order_no || ''}</span>
+      </div>
+    </div>
+    <div class="info-group" style="margin-top:4px">
+      <div class="info-row" style="width:48%">
+        <span class="label">电话</span>
+        <span class="value-half">${d.customer_phone || ''}</span>
+      </div>
+      <div class="info-row" style="width:48%">
+        <span class="label">日期</span>
+        <span class="value-half">${d.created_at || ''}</span>
+      </div>
+    </div>
+    <div class="info-row" style="margin-top:4px">
+      <span class="label">地址</span>
+      <span class="value">${d.customer_address || ''}</span>
+    </div>
+
+    <div class="items-title">商品明细</div>
+    <table class="items-table">
+      <thead><tr>
+        <th class="name-col">品名</th>
+        <th class="num-col">数量</th>
+        <th class="price-col">单价</th>
+        <th class="sub-col">小计</th>
+      </tr></thead>
+      <tbody>
+      ${items.map(i => `<tr>
+        <td class="name-col">${i.product_name}${i.product_spec ? '（' + i.product_spec + '）' : ''}</td>
+        <td class="num-col">${i.quantity}${i.product_unit || ''}</td>
+        <td class="price-col">${Number(i.unit_price).toFixed(2)}</td>
+        <td class="sub-col">${Number(i.subtotal).toFixed(2)}</td>
+      </tr>`).join('')}
+      </tbody>
+    </table>
+
+    <div class="amount-section">
+      <div class="amount-row"><span class="a-label">商品总额</span><span class="a-value">¥${Number(d.total_amount).toFixed(2)}</span></div>
+      ${Number(d.discount_amount) > 0 ? `<div class="amount-row"><span class="a-label">优惠金额</span><span class="a-value">-¥${Number(d.discount_amount).toFixed(2)}</span></div>` : ''}
+      <div class="amount-row highlight"><span class="a-label">实收金额</span><span class="a-value">¥${Number(d.final_amount).toFixed(2)}</span></div>
+    </div>
+    <div class="cn-amount-row"><span class="a-label">大写金额</span><span class="a-value">${numberToChinese(Number(d.final_amount) || 0)}</span></div>
+
+    ${oldItems.length > 0 ? `
+    <div class="old-section">
+      <div class="section-title">以旧换新</div>
+      <table class="old-table">
+        <thead><tr><th>类型</th><th>品牌</th><th>成色</th><th class="price-col">回收价</th></tr></thead>
+        <tbody>
+        ${oldItems.map(o => `<tr><td>${o.category}</td><td>${o.brand || '-'}</td><td>${o.condition || '-'}</td><td class="price-col">¥${Number(o.recycle_price).toFixed(2)}</td></tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+    ` : ''}
+
+    ${d.remark ? `
+    <div class="remark-row"><span class="label">备注</span><span class="value">${d.remark}</span></div>
+    ` : ''}
+
+    <div class="sign-section">
+      <div class="sign-item">收款人：<span class="sign-line"></span></div>
+      <div class="sign-item">客户签字：<span class="sign-line"></span></div>
+    </div>
+
+    <div class="footer">
+      <span>开单时间：${d.created_at || ''}</span>
+      <span>打印时间：${new Date().toLocaleString('zh-CN')}</span>
+    </div>
+  </div>
+</div>
+</body></html>
           `)
           printWindow.document.close()
-          printWindow.print()
+          setTimeout(() => printWindow.print(), 300)
         }
       }
     } catch {
@@ -192,7 +335,7 @@ export default function OrderList() {
   const columns = [
     { title: 'ID', dataIndex: 'id', key: 'id', width: 60 },
     { title: '订单号', dataIndex: 'order_no', key: 'order_no', width: 160 },
-    { title: '客户', dataIndex: 'customer_name', key: 'customer_name' },
+    { title: '客户', dataIndex: 'customer_name', key: 'customer_name', width: 90 },
     {
       title: '总金额', dataIndex: 'total_amount', key: 'total_amount', width: 100,
       render: (v: number) => `¥${v.toFixed(2)}`
@@ -221,21 +364,19 @@ export default function OrderList() {
     },
     {
       title: '创建时间', dataIndex: 'created_at', key: 'created_at', width: 170,
-      render: (v: string) => v?.replace('T', ' ').slice(0, 19) || '-'
+      render: (v: string) => <span style={{ whiteSpace: 'nowrap' }}>{v?.replace('T', ' ').slice(0, 19) || '-'}</span>
     },
     {
-      title: '操作', key: 'action', width: 220,
+      title: '操作', key: 'action', width: 280, fixed: 'right' as const,
       render: (_: unknown, record: SalesOrder) => (
-        <Space size="small">
+        <Space size="small" wrap>
           <Button type="link" size="small" icon={<EyeOutlined />} onClick={() => handleViewDetail(record.id)}>详情</Button>
-          <Button type="link" size="small" icon={<PrinterOutlined />} onClick={() => handlePrint(record.id)}>打印</Button>
-          {record.payment_status === 'unpaid' && record.status === 'normal' && (
-            <Button type="link" size="small" onClick={() => handleMarkPaid(record.id)}>收款</Button>
+          <Button type="link" size="small" icon={<PrinterOutlined />} onClick={() => confirmPrint(record.id)}>打印</Button>
+          {record.payment_status === '未付款' && record.status === '有效' && (
+            <Button type="link" size="small" onClick={() => confirmMarkPaid(record.id)}>收款</Button>
           )}
-          {record.status === 'normal' && (
-            <Popconfirm title="确定作废？作废后不可恢复" onConfirm={() => handleCancel(record.id)}>
-              <Button type="link" size="small" danger>作废</Button>
-            </Popconfirm>
+          {record.status === '有效' && (
+            <Button type="link" size="small" danger onClick={() => confirmCancel(record.id)}>作废</Button>
           )}
         </Space>
       )
@@ -266,8 +407,8 @@ export default function OrderList() {
             value={paymentStatus}
             onChange={setPaymentStatus}
             options={[
-              { value: 'unpaid', label: '未付款' },
-              { value: 'paid', label: '已付款' },
+              { value: '未付款', label: '未付款' },
+              { value: '已付款', label: '已付款' },
             ]}
           />
           <Select
@@ -277,8 +418,8 @@ export default function OrderList() {
             value={status}
             onChange={setStatus}
             options={[
-              { value: 'normal', label: '正常' },
-              { value: 'cancelled', label: '已作废' },
+              { value: '有效', label: '正常' },
+              { value: '已作废', label: '已作废' },
             ]}
           />
         </Space>
@@ -289,7 +430,7 @@ export default function OrderList() {
         dataSource={orders}
         rowKey="id"
         loading={loading}
-        scroll={{ x: 1300 }}
+        scroll={{ x: 1400 }}
         rowClassName={(record) => record.id === highlightId ? 'highlight-row' : ''}
         pagination={{
           current: page,

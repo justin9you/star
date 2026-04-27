@@ -3,6 +3,7 @@ import { Card, Row, Col, Statistic, Table, DatePicker, Space, Button, message } 
 import { DollarOutlined, ShoppingCartOutlined, TeamOutlined, RiseOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
 import { reportApi } from '../../services/reportApi'
+import { usePrivacyStore } from '../../stores/privacyStore'
 import dayjs from 'dayjs'
 
 interface DailySales {
@@ -32,6 +33,7 @@ export default function DailyReport() {
   const [dailySales, setDailySales] = useState<DailySales | null>(null)
   const [profitStats, setProfitStats] = useState<ProfitStats | null>(null)
   const [topProducts, setTopProducts] = useState<TopProduct[]>([])
+  const { isPrivacyMode } = usePrivacyStore()
 
   useEffect(() => {
     loadData()
@@ -102,9 +104,9 @@ export default function DailyReport() {
             <Card>
               <Statistic
                 title="今日销售额"
-                value={dailySales?.total_amount || 0}
-                prefix={<DollarOutlined />}
-                precision={2}
+                value={isPrivacyMode ? '***' : (dailySales?.total_amount || 0)}
+                prefix={isPrivacyMode ? '' : <DollarOutlined />}
+                precision={isPrivacyMode ? undefined : 2}
                 valueStyle={{ color: '#3f8600' }}
               />
             </Card>
@@ -135,9 +137,9 @@ export default function DailyReport() {
             <Card>
               <Statistic
                 title="今日毛利"
-                value={profitStats?.gross_profit || 0}
-                prefix={<RiseOutlined />}
-                precision={2}
+                value={isPrivacyMode ? '***' : (profitStats?.gross_profit || 0)}
+                prefix={isPrivacyMode ? '' : <RiseOutlined />}
+                precision={isPrivacyMode ? undefined : 2}
                 valueStyle={{ color: '#cf1322' }}
               />
             </Card>
@@ -150,25 +152,25 @@ export default function DailyReport() {
           <Col xs={24} sm={8}>
             <Statistic
               title="营业额"
-              value={profitStats?.total_revenue || 0}
-              prefix="¥"
-              precision={2}
+              value={isPrivacyMode ? '***' : (profitStats?.total_revenue || 0)}
+              prefix={isPrivacyMode ? '' : '¥'}
+              precision={isPrivacyMode ? undefined : 2}
             />
           </Col>
           <Col xs={24} sm={8}>
             <Statistic
               title="成本"
-              value={profitStats?.total_cost || 0}
-              prefix="¥"
-              precision={2}
+              value={isPrivacyMode ? '***' : (profitStats?.total_cost || 0)}
+              prefix={isPrivacyMode ? '' : '¥'}
+              precision={isPrivacyMode ? undefined : 2}
             />
           </Col>
           <Col xs={24} sm={8}>
             <Statistic
               title="毛利率"
-              value={profitStats?.profit_margin || 0}
-              suffix="%"
-              precision={2}
+              value={isPrivacyMode ? '***' : (profitStats?.profit_margin || 0)}
+              suffix={isPrivacyMode ? '' : '%'}
+              precision={isPrivacyMode ? undefined : 2}
             />
           </Col>
         </Row>

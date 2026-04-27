@@ -82,12 +82,12 @@ export default function WarehouseManagement() {
 
   const columns = [
     { title: 'ID', dataIndex: 'id', key: 'id', width: 60 },
-    { title: '仓库名称', dataIndex: 'name', key: 'name' },
+    { title: '仓库名称', dataIndex: 'name', key: 'name', width: 120 },
     {
       title: '仓库类型', dataIndex: 'type', key: 'type', width: 120,
       render: (type: string) => <Tag color={typeColorMap[type] || 'default'}>{type}</Tag>
     },
-    { title: '地址', dataIndex: 'address', key: 'address', ellipsis: true },
+    { title: '地址', dataIndex: 'address', key: 'address', width: 180, ellipsis: true },
     { title: '负责人', dataIndex: 'manager', key: 'manager', width: 100 },
     { title: '联系电话', dataIndex: 'phone', key: 'phone', width: 130 },
     {

@@ -4,6 +4,7 @@ import { PlusOutlined, EditOutlined, DeleteOutlined, QrcodeOutlined, BarcodeOutl
 import { QRCodeSVG } from 'qrcode.react'
 import JsBarcode from 'jsbarcode'
 import { inventoryApi } from '../../services/inventoryApi'
+import { usePrivacyStore, formatAmount } from '../../stores/privacyStore'
 import type { Product, ProductCreate, Brand, Category } from '../../types/inventory'
 
 // 条形码显示组件
@@ -60,6 +61,7 @@ export default function ProductManagement() {
   const [codeModalOpen, setCodeModalOpen] = useState(false)
   const [codeProduct, setCodeProduct] = useState<Product | null>(null)
   const [form] = Form.useForm()
+  const { isPrivacyMode } = usePrivacyStore()
 
   useEffect(() => {
     loadProducts()
@@ -139,7 +141,7 @@ export default function ProductManagement() {
     { title: '品牌', dataIndex: 'brand_name', key: 'brand_name' },
     { title: '类型', dataIndex: 'category_name', key: 'category_name' },
     { title: '规格', dataIndex: 'spec', key: 'spec' },
-    { title: '进货价', dataIndex: 'purchase_price', key: 'purchase_price', render: (v: number) => `¥${v}` },
+    { title: '进货价', dataIndex: 'purchase_price', key: 'purchase_price', render: (v: number) => formatAmount(v, isPrivacyMode) },
     { title: '销售价', dataIndex: 'sale_price', key: 'sale_price', render: (v: number) => `¥${v}` },
     { title: '单位', dataIndex: 'unit', key: 'unit', width: 60 },
     {
@@ -216,7 +218,7 @@ export default function ProductManagement() {
           <Form.Item name="spec" label="规格">
             <Input placeholder="如：200L/1.5匹/8kg" autoComplete="off" />
           </Form.Item>
-          <Form.Item name="purchase_price" label="进货价" rules={[{ required: true }]}>
+          <Form.Item name="purchase_price" label="进货价" rules={[{ required: !isPrivacyMode }]} style={isPrivacyMode ? { display: 'none' } : undefined}>
             <InputNumber prefix="¥" min={0} precision={2} style={{ width: '100%' }} />
           </Form.Item>
           <Form.Item name="sale_price" label="销售价" rules={[{ required: true }]}>

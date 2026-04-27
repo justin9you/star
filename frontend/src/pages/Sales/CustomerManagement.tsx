@@ -92,23 +92,23 @@ export default function CustomerManagement() {
 
   const columns = [
     { title: 'ID', dataIndex: 'id', key: 'id', width: 60 },
-    { title: '客户姓名', dataIndex: 'name', key: 'name' },
+    { title: '客户姓名', dataIndex: 'name', key: 'name', width: 90 },
     {
-      title: '联系电话', dataIndex: 'phone', key: 'phone', width: 130,
-      render: (phone: string) => <Space><PhoneOutlined />{phone}</Space>
+      title: '联系电话', dataIndex: 'phone', key: 'phone', width: 150,
+      render: (phone: string) => <span style={{ whiteSpace: 'nowrap' }}><PhoneOutlined /> {phone}</span>
     },
     {
       title: '地址', key: 'address', width: 280,
       render: (_: unknown, record: Customer) => {
         const parts = [record.province, record.city, record.district, record.town, record.address].filter(Boolean)
-        return <div style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>{parts.join('') || '-'}</div>
+        return <div style={{ whiteSpace: 'nowrap' }}>{parts.join('') || '-'}</div>
       }
     },
     { title: '联系人', dataIndex: 'contact', key: 'contact', width: 100 },
-    { title: '备注', dataIndex: 'remark', key: 'remark', ellipsis: true },
+    { title: '备注', dataIndex: 'remark', key: 'remark', width: 120, ellipsis: true },
     {
       title: '创建时间', dataIndex: 'created_at', key: 'created_at', width: 170,
-      render: (v: string) => v?.replace('T', ' ').slice(0, 19) || '-'
+      render: (v: string) => <span style={{ whiteSpace: 'nowrap' }}>{v?.replace('T', ' ').slice(0, 19) || '-'}</span>
     },
     {
       title: '操作', key: 'action', width: 150,

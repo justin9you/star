@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     JWT_EXPIRES_IN: int = 604800  # 7 days in seconds
 
     API_HOST: str = "127.0.0.1"
-    API_PORT: int = 8000
+    API_PORT: int = 8001
     API_PREFIX: str = "/api/v1"
 
     BACKUP_DIR: str = "./backups"
@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     DEFAULT_REGION_DISTRICT: str = "吴中区"
     DEFAULT_REGION_TOWN: str = "临湖镇"
 
-    SHOP_NAME: str = "亚星电子"
+    SHOP_NAME: str = "亚星电子经营部"
     SHOP_ADDRESS: str = "江苏省苏州市吴中区临湖镇"
     SHOP_PHONE: str = "138-0000-0000"
 

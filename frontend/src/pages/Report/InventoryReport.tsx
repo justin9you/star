@@ -72,7 +72,7 @@ export default function InventoryReport() {
     { title: '类型', dataIndex: 'category_name', key: 'category_name', width: 100 },
     { title: '仓库', dataIndex: 'warehouse_name', key: 'warehouse_name', width: 120 },
     {
-      title: '当前库存', dataIndex: 'quantity', key: 'quantity', width: 100,
+      title: '当前库存', dataIndex: 'quantity', key: 'quantity', width: 100, sorter: (a: InventoryReportItem, b: InventoryReportItem) => a.quantity - b.quantity,
       render: (qty: number, record: InventoryReportItem) => {
         const isLow = record.is_low_stock || qty <= record.min_quantity
         return isLow ? <Tag color="red">{qty}</Tag> : qty
