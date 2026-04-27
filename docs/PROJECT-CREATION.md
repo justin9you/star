@@ -8,9 +8,11 @@
 | 属性 | 值 |
 |------|-----|
 | **项目名称** | 亚星电子销售管理系统 |
-| **技术栈** | 前端: TypeScript + React / 后端: Python / 数据库: SQLite |
+| **技术栈** | 前端: TypeScript + React + Vite + Ant Design / 后端: Python + FastAPI / 数据库: SQLite |
 | **部署方式** | 本地单机版,解压即用,Windows 优先适配 |
 | **核心模块** | 库存管理、销售管理、报表统计 |
+| **开发状态** | ✅ 已完成开发 |
+| **仓库地址** | https://github.com/justin9you/star |
 
 ## 目录
 
