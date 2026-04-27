@@ -1,10 +1,10 @@
-# 亚星电子销售管理系统
+# 亚星电子经营部销售管理系统
 
 > 轻量级、可视化、全流程家电销售 + 库存 + 报表一体化管理系统
 
 ## 项目简介
 
-亚星电子销售管理系统是一个专为小型家电门店/经销商设计的本地销售管理系统，支持离线运行，零基础员工即可上手。
+亚星电子经营部销售管理系统是一个专为小型家电门店/经销商设计的本地销售管理系统，支持离线运行，零基础员工即可上手。
 
 ### 核心功能
 
@@ -18,6 +18,7 @@
 - **扫码枪支持**: 支持二维码、条形码扫描录入商品
 - **四级地址联动**: 省-市-区-镇地址选择，精准定位客户
 - **订单快照**: 客户信息、商品信息永久保存，不怕删除后数据丢失
+- **销售开单组件化**: 三步流程（选择客户 → 选择商品 → 确认开单），支持优惠、以旧换新
 
 ### 技术栈
 
@@ -26,6 +27,7 @@
 | 前端 | TypeScript + React + Vite + Ant Design + Zustand |
 | 后端 | Python + FastAPI + SQLAlchemy |
 | 数据库 | SQLite |
+| 测试 | pytest (后端) + vitest (前端) |
 | 部署 | 本地单机版，解压即用 |
 
 ## 快速开始
@@ -42,10 +44,10 @@
 cd backend
 pip install -r requirements.txt
 cp ../.env.example ../.env
-python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
+python -m uvicorn app.main:app --host 127.0.0.1 --port 8001
 ```
 
-访问 http://127.0.0.1:8000/docs 查看 API 文档
+访问 http://127.0.0.1:8001/docs 查看 API 文档
 
 ### 前端启动
 
@@ -55,7 +57,19 @@ pnpm install
 pnpm dev
 ```
 
-访问 http://localhost:5173 查看前端页面
+访问 http://localhost:8082 查看前端页面
+
+### 运行测试
+
+```bash
+# 后端测试
+cd backend
+pytest
+
+# 前端测试
+cd frontend
+pnpm test
+```
 
 ### 生产构建
 
@@ -73,11 +87,14 @@ star/
 │   │   ├── pages/            # 页面
 │   │   │   ├── Inventory/    # 库存管理页面
 │   │   │   ├── Sales/        # 销售管理页面
+│   │   │   │   └── components/  # 销售开单组件 (CustomerStep/ProductStep/ConfirmStep)
 │   │   │   └── Report/       # 报表页面
 │   │   ├── services/         # API 服务
 │   │   ├── stores/           # 状态管理 (Zustand)
+│   │   ├── test/             # 测试工具
 │   │   ├── data/             # 静态数据
 │   │   └── types/            # TypeScript 类型
+│   ├── vitest.config.ts      # Vitest 配置
 │   └── package.json
 ├── backend/                  # 后端项目
 │   ├── app/
@@ -86,8 +103,14 @@ star/
 │   │   ├── routers/          # API 路由
 │   │   ├── services/         # 业务逻辑
 │   │   └── utils/            # 工具函数
+│   ├── tests/                # pytest 测试
+│   │   ├── conftest.py       # 测试配置
+│   │   ├── test_auth.py      # 认证测试
+│   │   ├── test_inventory.py # 库存测试
+│   │   └── test_sales.py     # 销售测试
 │   ├── data/                 # SQLite 数据文件
 │   ├── backups/              # 数据备份
+│   ├── pytest.ini            # pytest 配置
 │   └── requirements.txt
 ├── docs/                      # 项目文档
 │   ├── PRD.md                # 产品需求文档
@@ -115,6 +138,7 @@ star/
 - ✅ 支持优惠金额、备注、以旧换新
 - ✅ 快捷添加客户/商品（搜索无结果时一键添加）
 - ✅ 今日销售报表点击订单数可跳转到订单列表
+- ✅ 订单打印支持规格、单位、旧家电、备注字段
 
 ### 性能指标
 
@@ -125,14 +149,17 @@ star/
 
 ### 默认配置
 
+- 店铺名称: 亚星电子经营部
+- 后端端口: 8001
+- 前端端口: 8082
 - 默认地址: 江苏省 - 苏州市 - 吴中区 - 临湖镇
 - 备份保留: 最近 30 天
 - 单管理员账号: admin / changeme
 
 ## 文档
 
-- [产品需求文档 (PRD)](docs/PRD.md)
-- [项目创建指南](docs/PROJECT-CREATION.md)
+- [产品需求文档 (PRD)](PRD.md)
+- [项目创建指南](PROJECT-CREATION.md)
 
 ## 开发进度
 
@@ -144,6 +171,9 @@ star/
 - [x] 扫码枪支持
 - [x] 今日销售报表快捷跳转
 - [x] 订单日期筛选
+- [x] 销售开单组件化重构
+- [x] 订单打印字段增强（规格、单位、旧家电、备注）
+- [x] 测试框架搭建（pytest + vitest）
 
 ## License
 
