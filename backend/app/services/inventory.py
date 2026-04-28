@@ -422,8 +422,9 @@ def get_or_create_inventory(db: Session, product_id: int, warehouse_id: int,
 
 
 def stock_in(db: Session, product_id: int, warehouse_id: int, quantity: int,
-             purchase_price=None, user_id: int = 1) -> Inventory:
-    """入库操作"""
+             purchase_price=None, user_id: int = 1, is_gift: bool = False,
+             reason: str = "采购入库") -> Inventory:
+    """入库操作，支持搭送库存"""
     if quantity <= 0:
         raise ValueError("入库数量必须大于0")
 
@@ -436,25 +437,32 @@ def stock_in(db: Session, product_id: int, warehouse_id: int, quantity: int,
 
     inv = get_or_create_inventory(db, product_id, warehouse_id)
     before_quantity = inv.quantity
-    inv.quantity += quantity
+    before_gift = inv.gift_quantity
+
+    if is_gift:
+        inv.gift_quantity = (inv.gift_quantity or 0) + quantity
+    else:
+        inv.quantity += quantity
+
     inv.updated_at = datetime.utcnow()
 
-    # 如果有进货价，更新商品进货价
-    if purchase_price is not None:
+    # 非搭送项更新商品进货价
+    if purchase_price is not None and not is_gift:
         product.purchase_price = purchase_price
 
     db.commit()
     db.refresh(inv)
 
-    log_operation(db, user_id, "入库", f"商品 {product.name} 入库 {quantity} 到 {warehouse.name}",
-                  before_data={"quantity": before_quantity},
-                  after_data={"quantity": inv.quantity, "warehouse": warehouse.name})
+    log_operation(db, user_id, reason,
+                  f"商品 {product.name} 入库 {quantity}{'(搭送)' if is_gift else ''} 到 {warehouse.name}",
+                  before_data={"quantity": before_quantity, "gift_quantity": before_gift},
+                  after_data={"quantity": inv.quantity, "gift_quantity": inv.gift_quantity, "warehouse": warehouse.name})
     return inv
 
 
 def stock_out(db: Session, product_id: int, warehouse_id: int, quantity: int,
-              user_id: int = 1, reason: str = "销售出库") -> Inventory:
-    """出库操作"""
+              user_id: int = 1, is_gift: bool = False, reason: str = "销售出库") -> Inventory:
+    """出库操作，正常出库优先消耗搭送库存，作废出库按 is_gift 精确扣减"""
     if quantity <= 0:
         raise ValueError("出库数量必须大于0")
 
@@ -465,20 +473,39 @@ def stock_out(db: Session, product_id: int, warehouse_id: int, quantity: int,
 
     if not inv:
         raise ValueError("库存记录不存在")
-    if inv.quantity < quantity:
-        raise ValueError(f"库存不足: 当前库存 {inv.quantity}，需要 {quantity}")
 
     before_quantity = inv.quantity
-    inv.quantity -= quantity
+    before_gift = inv.gift_quantity
+
+    if is_gift:
+        # 作废进货单时精确扣减搭送池
+        if (inv.gift_quantity or 0) < quantity:
+            raise ValueError(f"搭送库存不足: 当前搭送库存 {inv.gift_quantity or 0}，需要 {quantity}")
+        inv.gift_quantity -= quantity
+    else:
+        # 正常出库：先扣搭送库存，再扣正常库存
+        total_available = inv.quantity + (inv.gift_quantity or 0)
+        if total_available < quantity:
+            raise ValueError(f"库存不足: 当前总库存 {total_available}，需要 {quantity}")
+
+        remaining = quantity
+        if (inv.gift_quantity or 0) > 0:
+            consume_gift = min(inv.gift_quantity or 0, remaining)
+            inv.gift_quantity -= consume_gift
+            remaining -= consume_gift
+        if remaining > 0:
+            inv.quantity -= remaining
+
     inv.updated_at = datetime.utcnow()
     db.commit()
     db.refresh(inv)
 
     product = get_product(db, product_id)
     warehouse = get_warehouse(db, warehouse_id)
-    log_operation(db, user_id, reason, f"商品 {product.name if product else product_id} 从 {warehouse.name if warehouse else warehouse_id} 出库 {quantity}",
-                  before_data={"quantity": before_quantity},
-                  after_data={"quantity": inv.quantity})
+    log_operation(db, user_id, reason,
+                  f"商品 {product.name if product else product_id} 从 {warehouse.name if warehouse else warehouse_id} 出库 {quantity}",
+                  before_data={"quantity": before_quantity, "gift_quantity": before_gift},
+                  after_data={"quantity": inv.quantity, "gift_quantity": inv.gift_quantity})
     return inv
 
 
@@ -522,6 +549,7 @@ def get_inventory_list(db: Session, page: int = 1, page_size: int = 20,
             "product_id": item.product_id,
             "warehouse_id": item.warehouse_id,
             "quantity": item.quantity,
+            "gift_quantity": item.gift_quantity,
             "min_quantity": item.min_quantity,
             "product_name": product.name if product else "未知",
             "brand_name": brand_name,

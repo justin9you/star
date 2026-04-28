@@ -1,6 +1,6 @@
 import { request } from './api'
 import type { ApiResponse, PaginatedResponse } from '../types/common'
-import type { Customer, CustomerCreate, CustomerUpdate, SalesOrder, SalesOrderCreate } from '../types/sales'
+import type { Customer, CustomerCreate, CustomerUpdate, SalesOrder, SalesOrderCreate, OrderPaymentCreate } from '../types/sales'
 
 export const salesApi = {
   // 客户管理
@@ -55,5 +55,14 @@ export const salesApi = {
 
   printOrder: async (id: number): Promise<ApiResponse> => {
     return request.get(`/sales/orders/${id}/print`)
+  },
+
+  // 付款记录
+  addPayment: async (orderId: number, payments: OrderPaymentCreate[]): Promise<ApiResponse> => {
+    return request.post(`/sales/orders/${orderId}/payments`, payments)
+  },
+
+  getPayments: async (orderId: number): Promise<ApiResponse<{ payments: { id: number; payment_method: string; amount: number; remark?: string; created_at: string; created_by_name?: string }[]; total_paid: number }>> => {
+    return request.get(`/sales/orders/${orderId}/payments`)
   }
 }

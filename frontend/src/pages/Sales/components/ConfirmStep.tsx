@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Card, Table, Descriptions, Row, Col, Statistic, Input, InputNumber, Space, Button, Divider, message } from 'antd'
+import { Card, Table, Descriptions, Row, Col, Statistic, Input, InputNumber, Space, Button, Divider, App } from 'antd'
 import { CheckOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
 import { salesApi } from '../../../services/salesApi'
@@ -23,6 +23,7 @@ const OLD_COLUMNS = [
 
 export function ConfirmStep({ state, onStateChange, onPrev }: StepProps) {
   const navigate = useNavigate()
+  const { message } = App.useApp()
   const [submitting, setSubmitting] = useState(false)
 
   const selectedCustomer = state.customers.find(c => c.id === state.selectedCustomerId)
@@ -61,7 +62,7 @@ export function ConfirmStep({ state, onStateChange, onPrev }: StepProps) {
         navigate('/sales/orders')
       }
     } catch {
-      message.error('开单失败')
+      // 错误提示已由 api.ts 拦截器统一处理
     } finally {
       setSubmitting(false)
     }

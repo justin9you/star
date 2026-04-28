@@ -4,7 +4,7 @@ from decimal import Decimal
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
-from app.models.sales_order import SalesOrder, SalesOrderItem
+from app.models.sales_order import SalesOrder, SalesOrderItem, OrderPayment
 from app.models.product import Product
 from app.models.inventory import Inventory
 from app.models.old_appliance import OldAppliance
@@ -32,11 +32,19 @@ def get_daily_sales(db: Session, target_date: Optional[date] = None) -> dict:
         for item in o.items:
             total_quantity += item.quantity
 
+    # 今日实收金额（从付款记录统计）
+    payments = db.query(OrderPayment).filter(
+        OrderPayment.created_at >= start,
+        OrderPayment.created_at <= end
+    ).all()
+    paid_amount = sum(float(p.amount) for p in payments)
+
     return {
         "date": target_date.isoformat(),
         "total_quantity": total_quantity,
         "total_orders": total_orders,
-        "total_amount": Decimal(str(total_amount))
+        "total_amount": Decimal(str(total_amount)),
+        "paid_amount": Decimal(str(paid_amount))
     }
 
 

@@ -38,7 +38,10 @@ def init_db():
         customer,
         sales_order,
         old_appliance,
-        operation_log
+        operation_log,
+        purchase_order,
+        stock_ledger,
+        dispatch_order
     )
     from app.models.user import User
     from app.services.auth import get_password_hash
@@ -77,6 +80,7 @@ def _migrate_add_columns(engine):
         ("sales_order_items", "product_name", sqlalchemy.String(200)),
         ("sales_order_items", "product_spec", sqlalchemy.String(100)),
         ("sales_order_items", "product_unit", sqlalchemy.String(20)),
+        ("inventory", "gift_quantity", sqlalchemy.Integer),
     ]
     with engine.connect() as conn:
         for table, column, col_type in new_columns:

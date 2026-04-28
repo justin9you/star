@@ -1,13 +1,16 @@
 import { useEffect, useState } from 'react'
-import { Card, Table, Button, Modal, Descriptions, Tag, Space, Input, Select, message, DatePicker } from 'antd'
-import { EyeOutlined, PrinterOutlined } from '@ant-design/icons'
+import { Card, Table, Button, Modal, Descriptions, Tag, Space, Input, Select, DatePicker, App } from 'antd'
+import { EyeOutlined, PrinterOutlined, ToolOutlined } from '@ant-design/icons'
 import { useSearchParams } from 'react-router-dom'
 import dayjs from 'dayjs'
 import { salesApi } from '../../services/salesApi'
 import type { SalesOrder, SalesOrderItem } from '../../types/sales'
+import PaymentModal from './components/PaymentModal'
+import DispatchPrintModal from './components/DispatchPrintModal'
 
 const PAYMENT_STATUS_MAP: Record<string, { color: string; text: string }> = {
   '未付款': { color: 'red', text: '未付款' },
+  '部分付款': { color: 'orange', text: '部分付款' },
   '已付款': { color: 'green', text: '已付款' },
 }
 
@@ -64,6 +67,7 @@ function numberToChinese(n: number): string {
 }
 
 export default function OrderList() {
+  const { message, modal } = App.useApp()
   const [searchParams, setSearchParams] = useSearchParams()
   const [orders, setOrders] = useState<SalesOrder[]>([])
   const [total, setTotal] = useState(0)
@@ -72,10 +76,15 @@ export default function OrderList() {
   const [keyword, setKeyword] = useState('')
   const [paymentStatus, setPaymentStatus] = useState<string | undefined>()
   const [status, setStatus] = useState<string | undefined>()
-  const [dateFilter, setDateFilter] = useState<string | undefined>()
+  const [dateFilter, setDateFilter] = useState<string>(dayjs().format('YYYY-MM-DD'))
   const [detailOpen, setDetailOpen] = useState(false)
   const [detailOrder, setDetailOrder] = useState<SalesOrder | null>(null)
   const [highlightId, setHighlightId] = useState<number | null>(null)
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false)
+  const [paymentOrderId, setPaymentOrderId] = useState<number | null>(null)
+  const [paymentFinalAmount, setPaymentFinalAmount] = useState(0)
+  const [dispatchModalOpen, setDispatchModalOpen] = useState(false)
+  const [dispatchOrder, setDispatchOrder] = useState<SalesOrder | null>(null)
 
   useEffect(() => {
     loadOrders()
@@ -128,7 +137,7 @@ export default function OrderList() {
   }
 
   const confirmCancel = (orderId: number) => {
-    Modal.confirm({
+    modal.confirm({
       title: '确认作废',
       content: '确定要作废该订单吗？作废后不可恢复。',
       okText: '作废',
@@ -148,47 +157,42 @@ export default function OrderList() {
     }
   }
 
-  const confirmMarkPaid = (orderId: number) => {
-    Modal.confirm({
-      title: '确认收款',
-      content: '确定将该订单标记为已付款吗？',
-      okText: '确认收款',
-      cancelText: '取消',
-      onOk: () => handleMarkPaid(orderId),
-    })
+  const confirmMarkPaid = (orderId: number, finalAmount: number) => {
+    setPaymentOrderId(orderId)
+    setPaymentFinalAmount(finalAmount)
+    setPaymentModalOpen(true)
   }
 
-  const handleMarkPaid = async (orderId: number) => {
+  const handlePaymentSuccess = () => {
+    setPaymentModalOpen(false)
+    message.success('收款成功')
+    loadOrders()
+  }
+
+  const openDispatchModal = async (order: SalesOrder) => {
     try {
-      await salesApi.markPaid(orderId)
-      message.success('已标记为已付款')
-      loadOrders()
+      const res = await salesApi.getOrder(order.id)
+      if (res.data) {
+        setDispatchOrder(res.data as SalesOrder)
+        setDispatchModalOpen(true)
+      }
     } catch {
-      message.error('操作失败')
+      message.error('获取订单详情失败')
     }
   }
 
-  const confirmPrint = (orderId: number) => {
-    Modal.confirm({
-      title: '确认打印',
-      content: '确定要打印该订单吗？',
-      okText: '打印',
-      cancelText: '取消',
-      onOk: () => handlePrint(orderId),
-    })
+  const handleDispatchSuccess = () => {
+    setDispatchModalOpen(false)
   }
 
-  const handlePrint = async (orderId: number) => {
-    try {
-      const res = await salesApi.printOrder(orderId)
-      if (res.data) {
-        const d = res.data as Record<string, unknown>
-        const items = (d.items as Array<{ product_name: string; product_spec?: string; product_unit?: string; quantity: number; unit_price: number; subtotal: number }>) || []
-        const oldItems = (d.old_appliances as Array<{ category: string; brand?: string; condition?: string; recycle_price: number }>) || []
-        const printWindow = window.open('', '_blank')
-        if (printWindow) {
-          printWindow.document.write(`
-<!DOCTYPE html>
+  const confirmPrint = (orderId: number) => {
+    handlePrint(orderId)
+  }
+
+  const buildReceiptHtml = (d: Record<string, unknown>) => {
+    const items = (d.items as Array<{ product_name: string; product_spec?: string; product_unit?: string; quantity: number; unit_price: number; subtotal: number }>) || []
+    const oldItems = (d.old_appliances as Array<{ category: string; brand?: string; condition?: string; recycle_price: number }>) || []
+    return `<!DOCTYPE html>
 <html><head><title>收据 - ${d.order_no || ''}</title>
 <style>
   @page { size: A4; margin: 15mm; }
@@ -321,13 +325,42 @@ export default function OrderList() {
     </div>
   </div>
 </div>
-</body></html>
-          `)
-          printWindow.document.close()
-          setTimeout(() => printWindow.print(), 300)
+</body></html>`
+  }
+
+  const handlePrint = async (orderId: number) => {
+    // 用隐藏 iframe 打印，跳过预览窗口直接弹出打印对话框
+    const iframe = document.createElement('iframe')
+    iframe.style.position = 'fixed'
+    iframe.style.right = '0'
+    iframe.style.bottom = '0'
+    iframe.style.width = '0'
+    iframe.style.height = '0'
+    iframe.style.border = 'none'
+    document.body.appendChild(iframe)
+
+    try {
+      const res = await salesApi.printOrder(orderId)
+      if (res.data) {
+        const d = res.data as Record<string, unknown>
+        const html = buildReceiptHtml(d)
+        const doc = iframe.contentDocument || iframe.contentWindow?.document
+        if (!doc) {
+          message.error('打印失败')
+          return
         }
+        doc.open()
+        doc.write(html)
+        doc.close()
+        // 等待内容渲染后打印
+        setTimeout(() => {
+          iframe.contentWindow?.print()
+          // 打印对话框关闭后移除 iframe
+          setTimeout(() => document.body.removeChild(iframe), 1000)
+        }, 300)
       }
     } catch {
+      document.body.removeChild(iframe)
       message.error('打印失败')
     }
   }
@@ -349,9 +382,13 @@ export default function OrderList() {
       render: (v: number) => <strong>¥{v.toFixed(2)}</strong>
     },
     {
-      title: '付款状态', dataIndex: 'payment_status', key: 'payment_status', width: 100,
-      render: (s: string) => {
+      title: '付款状态', dataIndex: 'payment_status', key: 'payment_status', width: 120,
+      render: (s: string, record: SalesOrder) => {
         const m = PAYMENT_STATUS_MAP[s] || { color: 'default', text: s }
+        const paid = record.paid_amount || 0
+        if (s === '部分付款') {
+          return <Tag color={m.color}>已付 ¥{paid.toFixed(0)}</Tag>
+        }
         return <Tag color={m.color}>{m.text}</Tag>
       }
     },
@@ -367,13 +404,16 @@ export default function OrderList() {
       render: (v: string) => <span style={{ whiteSpace: 'nowrap' }}>{v?.replace('T', ' ').slice(0, 19) || '-'}</span>
     },
     {
-      title: '操作', key: 'action', width: 280, fixed: 'right' as const,
+      title: '操作', key: 'action', width: 320, fixed: 'right' as const,
       render: (_: unknown, record: SalesOrder) => (
         <Space size="small" wrap>
           <Button type="link" size="small" icon={<EyeOutlined />} onClick={() => handleViewDetail(record.id)}>详情</Button>
           <Button type="link" size="small" icon={<PrinterOutlined />} onClick={() => confirmPrint(record.id)}>打印</Button>
-          {record.payment_status === '未付款' && record.status === '有效' && (
-            <Button type="link" size="small" onClick={() => confirmMarkPaid(record.id)}>收款</Button>
+          {(record.payment_status === '未付款' || record.payment_status === '部分付款') && record.status === '有效' && (
+            <Button type="link" size="small" onClick={() => confirmMarkPaid(record.id, record.final_amount)}>收款</Button>
+          )}
+          {record.status === '有效' && (
+            <Button type="link" size="small" icon={<ToolOutlined />} onClick={() => openDispatchModal(record)}>派工</Button>
           )}
           {record.status === '有效' && (
             <Button type="link" size="small" danger onClick={() => confirmCancel(record.id)}>作废</Button>
@@ -391,8 +431,8 @@ export default function OrderList() {
           <DatePicker
             placeholder="选择日期"
             allowClear
-            value={dateFilter ? dayjs(dateFilter) : undefined}
-            onChange={(date) => setDateFilter(date ? date.format('YYYY-MM-DD') : undefined)}
+            value={dateFilter ? dayjs(dateFilter) : null}
+            onChange={(date) => setDateFilter(date ? date.format('YYYY-MM-DD') : '')}
           />
           <Input.Search autoComplete="off"
             placeholder="搜索订单号"
@@ -408,6 +448,7 @@ export default function OrderList() {
             onChange={setPaymentStatus}
             options={[
               { value: '未付款', label: '未付款' },
+              { value: '部分付款', label: '部分付款' },
               { value: '已付款', label: '已付款' },
             ]}
           />
@@ -462,6 +503,11 @@ export default function OrderList() {
                 <Tag color={PAYMENT_STATUS_MAP[detailOrder.payment_status]?.color}>
                   {PAYMENT_STATUS_MAP[detailOrder.payment_status]?.text || detailOrder.payment_status}
                 </Tag>
+                {detailOrder.paid_amount != null && detailOrder.paid_amount > 0 && (
+                  <span style={{ marginLeft: 8, fontSize: 12, color: '#666' }}>
+                    已付 ¥{detailOrder.paid_amount.toFixed(2)} / ¥{detailOrder.final_amount?.toFixed(2)}
+                  </span>
+                )}
               </Descriptions.Item>
               <Descriptions.Item label="订单状态">
                 <Tag color={ORDER_STATUS_MAP[detailOrder.status]?.color}>
@@ -508,12 +554,49 @@ export default function OrderList() {
               </>
             )}
 
+            {detailOrder.payments && detailOrder.payments.length > 0 && (
+              <>
+                <h4 style={{ marginTop: 16 }}>付款记录</h4>
+                <Table
+                  columns={[
+                    { title: '支付方式', dataIndex: 'payment_method', key: 'payment_method', width: 100 },
+                    { title: '金额', dataIndex: 'amount', key: 'amount', width: 100, render: (v: number) => `¥${v.toFixed(2)}` },
+                    { title: '备注', dataIndex: 'remark', key: 'remark', render: (v: string) => v || '-' },
+                    { title: '时间', dataIndex: 'created_at', key: 'created_at', width: 140, render: (v: string) => v?.replace('T', ' ').slice(0, 16) },
+                  ]}
+                  dataSource={detailOrder.payments}
+                  rowKey="id"
+                  pagination={false}
+                  size="small"
+                />
+              </>
+            )}
+
             {detailOrder.remark && (
               <p style={{ marginTop: 16 }}><strong>备注：</strong>{detailOrder.remark}</p>
             )}
           </>
         )}
       </Modal>
+
+      <PaymentModal
+        open={paymentModalOpen}
+        orderId={paymentOrderId || 0}
+        finalAmount={paymentFinalAmount}
+        onSuccess={handlePaymentSuccess}
+        onCancel={() => setPaymentModalOpen(false)}
+      />
+
+      <DispatchPrintModal
+        open={dispatchModalOpen}
+        orderNo={dispatchOrder?.order_no || ''}
+        customerName={dispatchOrder?.customer_name}
+        customerPhone={dispatchOrder?.customer_phone}
+        customerAddress={dispatchOrder?.customer_address}
+        paymentStatus={dispatchOrder?.payment_status}
+        items={dispatchOrder?.items || []}
+        onCancel={() => setDispatchModalOpen(false)}
+      />
     </Card>
   )
 }

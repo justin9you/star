@@ -1,17 +1,20 @@
-from fastapi import APIRouter, Depends, Query, HTTPException
+from fastapi import APIRouter, Depends, Query, HTTPException, Body
 from sqlalchemy.orm import Session
-from typing import Optional
+from typing import Optional, List
 
 from app.database import get_db
 from app.schemas.common import ResponseModel, PaginationModel
 from app.schemas.sales import (
     CustomerCreate, CustomerUpdate, CustomerResponse,
-    SalesOrderCreate, SalesOrderUpdate, SalesOrderResponse
+    SalesOrderCreate, SalesOrderUpdate, SalesOrderResponse,
+    OrderPaymentCreate
 )
 from app.services import sales as sales_service
 from app.services import inventory as inventory_service
 from app.services.auth import get_current_user
 from app.models.user import User
+from app.models.stock_ledger import StockLedger
+from app.models.sales_order import OrderPayment
 
 router = APIRouter()
 
@@ -111,14 +114,19 @@ async def list_orders(
     for o in items:
         # 优先使用快照数据，兼容旧订单回查
         customer_name = o.customer_name
+        customer_phone = o.customer_phone
+        customer_address = o.customer_address
         if not customer_name:
             customer = sales_service.get_customer(db, o.customer_id)
             customer_name = customer.name if customer else "未知"
+            customer_phone = customer.phone if customer else ""
+            customer_address = f"{customer.province}{customer.city}{customer.district}{customer.town}{customer.address or ''}" if customer else ""
         result_items.append({
             "id": o.id, "order_no": o.order_no, "customer_id": o.customer_id,
-            "customer_name": customer_name,
+            "customer_name": customer_name, "customer_phone": customer_phone, "customer_address": customer_address,
             "total_amount": float(o.total_amount), "discount_amount": float(o.discount_amount),
             "final_amount": float(o.final_amount), "payment_status": o.payment_status,
+            "paid_amount": float(sales_service.get_payment_total(db, o.id)),
             "status": o.status, "remark": o.remark, "created_at": o.created_at.isoformat()
         })
     return {"items": result_items, "total": total, "page": page, "page_size": page_size, "total_pages": (total + page_size - 1) // page_size}
@@ -139,6 +147,20 @@ async def get_order(order_id: int, db: Session = Depends(get_db)):
         customer_phone = customer.phone if customer else ""
         customer_address = f"{customer.province}{customer.city}{customer.district}{customer.town}{customer.address or ''}" if customer else ""
 
+    # 查询每个商品的出库仓库信息
+    item_warehouses = {}
+    ledgers = db.query(StockLedger).filter(StockLedger.order_id == order_id, StockLedger.quantity < 0).all()
+    for ledger in ledgers:
+        if ledger.order_item_id:
+            wh = inventory_service.get_warehouse(db, ledger.warehouse_id)
+            if ledger.order_item_id not in item_warehouses:
+                item_warehouses[ledger.order_item_id] = []
+            item_warehouses[ledger.order_item_id].append({
+                "warehouse_id": ledger.warehouse_id,
+                "warehouse_name": wh.name if wh else "",
+                "quantity": abs(ledger.quantity)
+            })
+
     items = []
     for i in o.items:
         # 优先使用快照数据，兼容旧订单明细
@@ -153,7 +175,8 @@ async def get_order(order_id: int, db: Session = Depends(get_db)):
         items.append({
             "id": i.id, "order_id": i.order_id, "product_id": i.product_id,
             "product_name": product_name, "product_spec": product_spec, "product_unit": product_unit,
-            "quantity": i.quantity, "unit_price": float(i.unit_price), "subtotal": float(i.subtotal)
+            "quantity": i.quantity, "unit_price": float(i.unit_price), "subtotal": float(i.subtotal),
+            "warehouses": item_warehouses.get(i.id, [])
         })
     old_appliances = []
     for oa in o.old_appliances:
@@ -163,13 +186,22 @@ async def get_order(order_id: int, db: Session = Depends(get_db)):
             "recycle_price": float(oa.recycle_price), "warehouse_name": wh.name if wh else None,
             "recycle_date": oa.recycle_date.isoformat(), "remark": oa.remark
         })
+    # 付款记录
+    paid_amount = float(sales_service.get_payment_total(db, o.id))
+    payments = [{
+        "id": p.id, "payment_method": p.payment_method, "amount": float(p.amount),
+        "remark": p.remark, "created_at": p.created_at.isoformat(),
+        "created_by_name": p.creator.username if p.creator else None
+    } for p in o.payments]
+
     return ResponseModel(data={
         "id": o.id, "order_no": o.order_no, "customer_id": o.customer_id,
         "customer_name": customer_name, "customer_phone": customer_phone, "customer_address": customer_address,
         "total_amount": float(o.total_amount), "discount_amount": float(o.discount_amount),
         "final_amount": float(o.final_amount), "payment_status": o.payment_status,
+        "paid_amount": paid_amount,
         "status": o.status, "remark": o.remark, "created_at": o.created_at.isoformat(),
-        "items": items, "old_appliances": old_appliances
+        "items": items, "old_appliances": old_appliances, "payments": payments
     })
 
 
@@ -250,4 +282,39 @@ async def print_order(order_id: int, db: Session = Depends(get_db)):
         "final_amount": float(o.final_amount),
         "remark": o.remark or "",
         "created_at": o.created_at.strftime("%Y-%m-%d %H:%M:%S")
+    })
+
+
+# ==================== 付款记录 ====================
+@router.post("/orders/{order_id}/payments", response_model=ResponseModel)
+async def add_payment(
+    order_id: int,
+    payments: List[OrderPaymentCreate],
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """添加付款记录，支持组合支付"""
+    try:
+        payments_data = [p.model_dump() for p in payments]
+        sales_service.add_payment(db, order_id, payments_data, current_user.id)
+        return ResponseModel(message="付款成功")
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.get("/orders/{order_id}/payments", response_model=ResponseModel)
+async def get_payments(order_id: int, db: Session = Depends(get_db)):
+    """获取订单付款记录"""
+    payments = sales_service.get_payments(db, order_id)
+    total = sales_service.get_payment_total(db, order_id)
+    return ResponseModel(data={
+        "payments": [{
+            "id": p.id,
+            "payment_method": p.payment_method,
+            "amount": float(p.amount),
+            "remark": p.remark,
+            "created_at": p.created_at.isoformat(),
+            "created_by_name": p.creator.username if p.creator else None
+        } for p in payments],
+        "total_paid": float(total)
     })

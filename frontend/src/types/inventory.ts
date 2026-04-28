@@ -126,6 +126,7 @@ export interface Inventory {
   product_id: number;
   warehouse_id: number;
   quantity: number;
+  gift_quantity: number;
   min_quantity: number;
   product_name?: string;
   warehouse_name?: string;

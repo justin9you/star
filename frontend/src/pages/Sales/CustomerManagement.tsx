@@ -62,6 +62,18 @@ export default function CustomerManagement() {
     }
   }
 
+  // 监听表单字段变化，实现客户姓名→联系人联动（仅新建时）
+  const handleValuesChange = (changedValues: Partial<Customer>) => {
+    // 仅新建模式下联动
+    if (!editingCustomer && 'name' in changedValues && changedValues.name !== undefined) {
+      const currentContact = form.getFieldValue('contact')
+      // 只有联系人为空或等于之前的客户姓名时才自动填充
+      if (!currentContact) {
+        form.setFieldsValue({ contact: changedValues.name })
+      }
+    }
+  }
+
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields()
@@ -162,7 +174,7 @@ export default function CustomerManagement() {
         okText="确定"
         cancelText="取消"
       >
-        <Form form={form} layout="vertical">
+        <Form form={form} layout="vertical" onValuesChange={handleValuesChange}>
           <Form.Item name="name" label="客户姓名" rules={[{ required: true, message: '请输入客户姓名' }]}>
             <Input placeholder="请输入客户姓名" autoComplete="off" />
           </Form.Item>

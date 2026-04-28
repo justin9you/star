@@ -1,4 +1,6 @@
+import { useEffect } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
+import { App as AntApp } from 'antd'
 import Login from './pages/Login'
 import MainLayout from './components/layout/MainLayout'
 import Dashboard from './pages/Dashboard'
@@ -10,12 +12,22 @@ import InventoryList from './pages/Inventory/InventoryList'
 import CustomerManagement from './pages/Sales/CustomerManagement'
 import SalesOrder from './pages/Sales/SalesOrder'
 import OrderList from './pages/Sales/OrderList'
+import DispatchList from './pages/Sales/DispatchList'
+import PurchaseOrder from './pages/Purchase/PurchaseOrder'
+import PurchaseOrderList from './pages/Purchase/PurchaseOrderList'
 import DailyReport from './pages/Report/DailyReport'
 import InventoryReport from './pages/Report/InventoryReport'
 import Settings from './pages/Settings'
+import { setMessageApi } from './services/api'
 import './App.css'
 
 function App() {
+  const { message } = AntApp.useApp()
+
+  useEffect(() => {
+    setMessageApi(message)
+  }, [message])
+
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
@@ -33,6 +45,11 @@ function App() {
           <Route path="customers" element={<CustomerManagement />} />
           <Route path="order" element={<SalesOrder />} />
           <Route path="orders" element={<OrderList />} />
+          <Route path="dispatch" element={<DispatchList />} />
+        </Route>
+        <Route path="purchase">
+          <Route path="order" element={<PurchaseOrder />} />
+          <Route path="orders" element={<PurchaseOrderList />} />
         </Route>
         <Route path="report">
           <Route path="daily" element={<DailyReport />} />

@@ -106,6 +106,24 @@ class SalesOrderUpdate(BaseModel):
     remark: Optional[str] = None
 
 
+class OrderPaymentCreate(BaseModel):
+    payment_method: str
+    amount: Decimal
+    remark: Optional[str] = None
+
+
+class OrderPaymentResponse(BaseModel):
+    id: int
+    order_id: int
+    payment_method: str
+    amount: Decimal
+    remark: Optional[str] = None
+    created_at: datetime
+    created_by_name: Optional[str] = None
+
+    model_config = {"from_attributes": True}
+
+
 class SalesOrderResponse(BaseModel):
     id: int
     order_no: str
@@ -118,9 +136,11 @@ class SalesOrderResponse(BaseModel):
     final_amount: Decimal
     payment_status: str
     status: str
+    paid_amount: Decimal = Decimal("0")
     remark: Optional[str] = None
     created_at: datetime
     items: List[SalesOrderItemResponse] = []
     old_appliances: List[OldApplianceResponse] = []
+    payments: List[OrderPaymentResponse] = []
 
     model_config = {"from_attributes": True}

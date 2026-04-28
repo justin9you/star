@@ -48,6 +48,7 @@ export interface SalesOrderItem {
   quantity: number;
   unit_price: number;
   subtotal: number;
+  warehouses?: { warehouse_id: number; warehouse_name: string; quantity: number }[];
 }
 
 export interface SalesOrderItemCreate {
@@ -89,11 +90,13 @@ export interface SalesOrder {
   discount_amount: number;
   final_amount: number;
   payment_status: string;
+  paid_amount?: number;
   status: string;
   remark?: string;
   created_at: string;
   items: SalesOrderItem[];
   old_appliances: OldAppliance[];
+  payments?: OrderPayment[];
 }
 
 export interface SalesOrderCreate {
@@ -110,4 +113,31 @@ export interface SalesOrderUpdate {
   discount_amount?: number;
   payment_status?: string;
   remark?: string;
+}
+
+// 支付方式
+export const PAYMENT_METHODS = [
+  { value: '现金', label: '现金' },
+  { value: '数字人民币', label: '数字人民币' },
+  { value: '微信', label: '微信' },
+  { value: '支付宝', label: '支付宝' },
+  { value: '信用卡', label: '信用卡' },
+  { value: '银行转账', label: '银行转账' },
+  { value: '其他', label: '其他' },
+] as const
+
+export interface OrderPayment {
+  id: number
+  order_id: number
+  payment_method: string
+  amount: number
+  remark?: string
+  created_at: string
+  created_by_name?: string
+}
+
+export interface OrderPaymentCreate {
+  payment_method: string
+  amount: number
+  remark?: string
 }

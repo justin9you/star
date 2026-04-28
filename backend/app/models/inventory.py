@@ -11,6 +11,7 @@ class Inventory(Base):
     product_id = Column(Integer, ForeignKey("products.id"), index=True, nullable=False, comment="商品ID")
     warehouse_id = Column(Integer, ForeignKey("warehouses.id"), index=True, nullable=False, comment="仓库ID")
     quantity = Column(Integer, default=0, comment="库存数量")
+    gift_quantity = Column(Integer, default=0, comment="搭送库存数量")
     min_quantity = Column(Integer, default=10, comment="最低库存预警")
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 

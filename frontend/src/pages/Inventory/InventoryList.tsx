@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
 import { Card, Table, Button, Modal, Form, Input, InputNumber, Select, Space, message, Tag, Alert } from 'antd'
 import { PlusOutlined } from '@ant-design/icons'
+import { useNavigate } from 'react-router-dom'
 import { inventoryApi } from '../../services/inventoryApi'
 import type { Inventory, Warehouse, Product, StockInRequest } from '../../types/inventory'
 
 export default function InventoryList() {
+  const navigate = useNavigate()
   const [inventory, setInventory] = useState<Inventory[]>([])
   const [warehouses, setWarehouses] = useState<Warehouse[]>([])
   const [products, setProducts] = useState<Product[]>([])
@@ -64,11 +66,15 @@ export default function InventoryList() {
     { title: '商品名称', dataIndex: 'product_name', key: 'product_name' },
     { title: '仓库', dataIndex: 'warehouse_name', key: 'warehouse_name' },
     {
-      title: '当前库存', dataIndex: 'quantity', key: 'quantity', width: 100, sorter: (a: Inventory, b: Inventory) => a.quantity - b.quantity,
+      title: '正常库存', dataIndex: 'quantity', key: 'quantity', width: 100,
       render: (qty: number, record: Inventory) => {
         const isLow = record.is_low_stock || qty <= record.min_quantity
         return isLow ? <Tag color="red">{qty}</Tag> : qty
       }
+    },
+    {
+      title: '搭送库存', dataIndex: 'gift_quantity', key: 'gift_quantity', width: 100,
+      render: (v: number) => v > 0 ? <Tag color="orange">{v}</Tag> : '-',
     },
     {
       title: '最低库存', dataIndex: 'min_quantity', key: 'min_quantity', width: 100,
@@ -108,7 +114,8 @@ export default function InventoryList() {
           >
             仅看库存不足
           </Button>
-          <Button type="primary" icon={<PlusOutlined />} onClick={handleStockIn}>采购入库</Button>
+          <Button style={{ display: 'none' }} icon={<PlusOutlined />} onClick={handleStockIn}>采购入库</Button>
+          <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate('/purchase/order')}>创建进货单</Button>
         </Space>
       }
     >

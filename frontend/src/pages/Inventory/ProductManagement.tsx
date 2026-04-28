@@ -268,7 +268,6 @@ export default function ProductManagement() {
               children: codeProduct?.qr_code ? (
                 <div style={{ textAlign: 'center', padding: 20 }}>
                   <QRCodeSVG value={codeProduct.qr_code} size={200} level="H" />
-                  <p style={{ marginTop: 16, fontSize: 16, color: '#666' }}>{codeProduct.qr_code}</p>
                 </div>
               ) : (
                 <div style={{ textAlign: 'center', padding: 40, color: '#999' }}>

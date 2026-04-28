@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 
 from app.config import settings
 from app.database import init_db
-from app.routers import auth, inventory, sales, report, backup
+from app.routers import auth, inventory, sales, report, backup, purchase, dispatch
 
 
 @asynccontextmanager
@@ -36,6 +36,8 @@ app.include_router(inventory.router, prefix=f"{settings.API_PREFIX}/inventory", 
 app.include_router(sales.router, prefix=f"{settings.API_PREFIX}/sales", tags=["销售管理"])
 app.include_router(report.router, prefix=f"{settings.API_PREFIX}/report", tags=["报表统计"])
 app.include_router(backup.router, prefix=f"{settings.API_PREFIX}/backup", tags=["数据备份"])
+app.include_router(purchase.router, prefix=f"{settings.API_PREFIX}/purchase", tags=["进货管理"])
+app.include_router(dispatch.router, prefix=f"{settings.API_PREFIX}/dispatch", tags=["派工管理"])
 
 
 @app.get("/")

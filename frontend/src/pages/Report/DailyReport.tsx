@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Card, Row, Col, Statistic, Table, DatePicker, Space, Button, message } from 'antd'
-import { DollarOutlined, ShoppingCartOutlined, TeamOutlined, RiseOutlined } from '@ant-design/icons'
+import { DollarOutlined, ShoppingCartOutlined, TeamOutlined, RiseOutlined, PayCircleOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
 import { reportApi } from '../../services/reportApi'
 import { usePrivacyStore } from '../../stores/privacyStore'
@@ -10,6 +10,7 @@ interface DailySales {
   total_quantity: number
   total_orders: number
   total_amount: number
+  paid_amount: number
 }
 
 interface ProfitStats {
@@ -112,6 +113,17 @@ export default function DailyReport() {
             </Card>
           </Col>
           <Col xs={24} sm={12} md={6}>
+            <Card>
+              <Statistic
+                title="今日实收"
+                value={isPrivacyMode ? '***' : (dailySales?.paid_amount || 0)}
+                prefix={isPrivacyMode ? '' : <PayCircleOutlined />}
+                precision={isPrivacyMode ? undefined : 2}
+                valueStyle={{ color: '#1890ff' }}
+              />
+            </Card>
+          </Col>
+          <Col xs={24} sm={12} md={6}>
             <Card
               style={{ cursor: 'pointer' }}
               hoverable
@@ -133,6 +145,8 @@ export default function DailyReport() {
               />
             </Card>
           </Col>
+        </Row>
+        <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
           <Col xs={24} sm={12} md={6}>
             <Card>
               <Statistic

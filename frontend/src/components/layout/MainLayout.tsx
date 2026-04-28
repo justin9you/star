@@ -12,6 +12,7 @@ import {
   FormOutlined,
   LockOutlined,
   UnlockOutlined,
+  ImportOutlined,
 } from '@ant-design/icons'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useEffect } from 'react'
@@ -52,6 +53,16 @@ const menuItems = [
     children: [
       { key: '/sales/customers', label: '客户管理' },
       { key: '/sales/orders', label: '订单列表' },
+      { key: '/sales/dispatch', label: '派工单' },
+    ],
+  },
+  {
+    key: '/purchase',
+    icon: <ImportOutlined />,
+    label: '进货管理',
+    children: [
+      { key: '/purchase/order', label: '创建进货单' },
+      { key: '/purchase/orders', label: '进货单列表' },
     ],
   },
   {
@@ -103,6 +114,7 @@ export default function MainLayout() {
     const keys: string[] = []
     if (path.startsWith('/inventory')) keys.push('/inventory')
     if (path.startsWith('/sales')) keys.push('/sales')
+    if (path.startsWith('/purchase')) keys.push('/purchase')
     if (path.startsWith('/report')) keys.push('/report')
     return keys
   }

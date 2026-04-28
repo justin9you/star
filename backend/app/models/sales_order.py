@@ -7,12 +7,23 @@ import enum
 
 class PaymentStatus(str, enum.Enum):
     UNPAID = "未付款"
+    PARTIAL = "部分付款"
     PAID = "已付款"
 
 
 class OrderStatus(str, enum.Enum):
     ACTIVE = "有效"
     CANCELLED = "已作废"
+
+
+class PaymentMethod(str, enum.Enum):
+    CASH = "现金"
+    DIGITAL_RMB = "数字人民币"
+    WECHAT = "微信"
+    ALIPAY = "支付宝"
+    CREDIT_CARD = "信用卡"
+    BANK_TRANSFER = "银行转账"
+    OTHER = "其他"
 
 
 class SalesOrder(Base):
@@ -38,6 +49,25 @@ class SalesOrder(Base):
     customer = relationship("Customer", back_populates="sales_orders")
     items = relationship("SalesOrderItem", back_populates="order", cascade="all, delete-orphan")
     old_appliances = relationship("OldAppliance", back_populates="sales_order")
+    stock_ledgers = relationship("StockLedger", back_populates="order", cascade="all, delete-orphan")
+    payments = relationship("OrderPayment", back_populates="order", cascade="all, delete-orphan")
+    dispatch_orders = relationship("DispatchOrder", back_populates="sales_order")
+
+
+class OrderPayment(Base):
+    """订单付款记录 - 支持多种支付方式组合"""
+    __tablename__ = "order_payments"
+
+    id = Column(Integer, primary_key=True, index=True)
+    order_id = Column(Integer, ForeignKey("sales_orders.id"), index=True, nullable=False, comment="订单ID")
+    payment_method = Column(String(20), nullable=False, comment="支付方式")
+    amount = Column(Numeric(10, 2), nullable=False, comment="支付金额")
+    remark = Column(String(255), comment="备注")
+    created_at = Column(DateTime, default=datetime.utcnow, comment="支付时间")
+    created_by = Column(Integer, ForeignKey("users.id"), comment="操作人ID")
+
+    order = relationship("SalesOrder", back_populates="payments")
+    creator = relationship("User")
 
 
 class SalesOrderItem(Base):
@@ -57,3 +87,4 @@ class SalesOrderItem(Base):
 
     order = relationship("SalesOrder", back_populates="items")
     product = relationship("Product", back_populates="order_items")
+    stock_ledgers = relationship("StockLedger", back_populates="order_item", cascade="all, delete-orphan")
