@@ -88,6 +88,7 @@ export interface SalesOrder {
   customer_address?: string;
   total_amount: number;
   discount_amount: number;
+  subsidy_amount?: number;
   final_amount: number;
   payment_status: string;
   paid_amount?: number;
@@ -103,6 +104,7 @@ export interface SalesOrderCreate {
   customer_id: number;
   items: SalesOrderItemCreate[];
   discount_amount?: number;
+  subsidy_amount?: number;
   old_appliances?: OldApplianceCreate[];
   remark?: string;
 }
@@ -111,6 +113,7 @@ export interface SalesOrderUpdate {
   customer_id?: number;
   items?: SalesOrderItemCreate[];
   discount_amount?: number;
+  subsidy_amount?: number;
   payment_status?: string;
   remark?: string;
 }

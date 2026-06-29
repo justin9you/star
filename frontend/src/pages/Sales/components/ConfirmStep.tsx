@@ -28,7 +28,7 @@ export function ConfirmStep({ state, onStateChange, onPrev }: StepProps) {
 
   const selectedCustomer = state.customers.find(c => c.id === state.selectedCustomerId)
   const totalAmount = state.orderItems.reduce((sum, i) => sum + i.subtotal, 0)
-  const finalAmount = totalAmount - state.discountAmount
+  const finalAmount = totalAmount - state.discountAmount - state.subsidyAmount
 
   const handleSubmitOrder = async () => {
     if (!state.selectedCustomerId) {
@@ -51,6 +51,7 @@ export function ConfirmStep({ state, onStateChange, onPrev }: StepProps) {
         customer_id: state.selectedCustomerId,
         items,
         discount_amount: state.discountAmount || undefined,
+        subsidy_amount: state.subsidyAmount || undefined,
         old_appliances: state.oldAppliances.length > 0 ? state.oldAppliances : undefined,
         remark: state.orderRemark || undefined,
       })
@@ -100,25 +101,39 @@ export function ConfirmStep({ state, onStateChange, onPrev }: StepProps) {
       )}
 
       <Row gutter={16} style={{ marginTop: 16 }}>
-        <Col span={8}>
+        <Col span={6}>
           <Statistic title="商品总额" value={totalAmount} prefix="¥" precision={2} />
         </Col>
-        <Col span={8}>
+        <Col span={6}>
           <div style={{ marginTop: 4 }}>
             <label>优惠金额：</label>
             <InputNumber
               min={0}
-              max={totalAmount}
+              max={totalAmount - state.subsidyAmount}
               value={state.discountAmount}
               onChange={v => onStateChange({ discountAmount: v || 0 })}
               prefix="¥"
               precision={2}
-              style={{ width: 160 }}
+              style={{ width: '100%' }}
             />
           </div>
         </Col>
-        <Col span={8}>
-          <Statistic title="实收金额" value={finalAmount} prefix="¥" precision={2} valueStyle={{ color: '#cf1322' }} />
+        <Col span={6}>
+          <div style={{ marginTop: 4 }}>
+            <label>国补金额：</label>
+            <InputNumber
+              min={0}
+              max={totalAmount - state.discountAmount}
+              value={state.subsidyAmount}
+              onChange={v => onStateChange({ subsidyAmount: v || 0 })}
+              prefix="¥"
+              precision={2}
+              style={{ width: '100%' }}
+            />
+          </div>
+        </Col>
+        <Col span={6}>
+          <Statistic title="客户实付" value={finalAmount} prefix="¥" precision={2} valueStyle={{ color: '#cf1322' }} />
         </Col>
       </Row>
 

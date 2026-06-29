@@ -34,6 +34,7 @@ describe('CustomerStep', () => {
     selectedCustomerId: null,
     orderItems: [],
     discountAmount: 0,
+    subsidyAmount: 0,
     orderRemark: '',
     oldAppliances: [],
   }

@@ -91,7 +91,9 @@ async def create_order(order: SalesOrderCreate, db: Session = Depends(get_db), c
 
         result = sales_service.create_order(
             db, order.customer_id, items_data,
-            order.discount_amount or 0, old_data, order.remark, current_user.id
+            discount_amount=order.discount_amount or 0,
+            subsidy_amount=order.subsidy_amount or 0,
+            old_appliances=old_data, remark=order.remark, user_id=current_user.id
         )
         return ResponseModel(data={"id": result.id, "order_no": result.order_no, "final_amount": float(result.final_amount)}, message="销售单创建成功")
     except ValueError as e:
@@ -125,6 +127,7 @@ async def list_orders(
             "id": o.id, "order_no": o.order_no, "customer_id": o.customer_id,
             "customer_name": customer_name, "customer_phone": customer_phone, "customer_address": customer_address,
             "total_amount": float(o.total_amount), "discount_amount": float(o.discount_amount),
+            "subsidy_amount": float(o.subsidy_amount or 0),
             "final_amount": float(o.final_amount), "payment_status": o.payment_status,
             "paid_amount": float(sales_service.get_payment_total(db, o.id)),
             "status": o.status, "remark": o.remark, "created_at": o.created_at.isoformat()
@@ -198,6 +201,7 @@ async def get_order(order_id: int, db: Session = Depends(get_db)):
         "id": o.id, "order_no": o.order_no, "customer_id": o.customer_id,
         "customer_name": customer_name, "customer_phone": customer_phone, "customer_address": customer_address,
         "total_amount": float(o.total_amount), "discount_amount": float(o.discount_amount),
+        "subsidy_amount": float(o.subsidy_amount or 0),
         "final_amount": float(o.final_amount), "payment_status": o.payment_status,
         "paid_amount": paid_amount,
         "status": o.status, "remark": o.remark, "created_at": o.created_at.isoformat(),
@@ -279,6 +283,7 @@ async def print_order(order_id: int, db: Session = Depends(get_db)):
         "old_appliances": old_appliances,
         "total_amount": float(o.total_amount),
         "discount_amount": float(o.discount_amount),
+        "subsidy_amount": float(o.subsidy_amount or 0),
         "final_amount": float(o.final_amount),
         "remark": o.remark or "",
         "created_at": o.created_at.strftime("%Y-%m-%d %H:%M:%S")

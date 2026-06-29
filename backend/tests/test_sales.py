@@ -143,6 +143,50 @@ class TestSalesOrder:
         data = response.json()
         assert data["data"]["final_amount"] == 250.00
 
+    def test_create_order_with_subsidy(self, client, auth_headers):
+        """创建带国补的订单：客户实付 = 总额 - 国补"""
+        response = client.post("/api/v1/sales/orders", json={
+            "customer_id": self.customer_id,
+            "items": [
+                {"product_id": self.product_id, "quantity": 2, "unit_price": 150.00}
+            ],
+            "subsidy_amount": 60.00
+        }, headers=auth_headers)
+        assert response.status_code == 200
+        data = response.json()
+        assert data["data"]["final_amount"] == 240.00
+
+    def test_create_order_with_discount_and_subsidy(self, client, auth_headers):
+        """优惠与国补叠加：实付 = 总额 - 优惠 - 国补"""
+        create_resp = client.post("/api/v1/sales/orders", json={
+            "customer_id": self.customer_id,
+            "items": [
+                {"product_id": self.product_id, "quantity": 2, "unit_price": 150.00}
+            ],
+            "discount_amount": 50.00,
+            "subsidy_amount": 60.00
+        }, headers=auth_headers)
+        assert create_resp.status_code == 200
+        assert create_resp.json()["data"]["final_amount"] == 190.00
+
+        # 详情中国补字段独立返回
+        order_id = create_resp.json()["data"]["id"]
+        detail = client.get(f"/api/v1/sales/orders/{order_id}").json()["data"]
+        assert detail["subsidy_amount"] == 60.00
+        assert detail["discount_amount"] == 50.00
+
+    def test_create_order_subsidy_exceeds_total(self, client, auth_headers):
+        """优惠与国补之和超过总额时创建失败"""
+        response = client.post("/api/v1/sales/orders", json={
+            "customer_id": self.customer_id,
+            "items": [
+                {"product_id": self.product_id, "quantity": 1, "unit_price": 150.00}
+            ],
+            "discount_amount": 100.00,
+            "subsidy_amount": 100.00
+        }, headers=auth_headers)
+        assert response.status_code == 400
+
     def test_create_order_insufficient_stock(self, client, auth_headers):
         """库存不足时创建订单失败"""
         response = client.post("/api/v1/sales/orders", json={

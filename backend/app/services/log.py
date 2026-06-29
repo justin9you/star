@@ -12,9 +12,13 @@ def log_operation(
     operation_type: str,
     operation_detail: str,
     before_data: Optional[dict] = None,
-    after_data: Optional[dict] = None
+    after_data: Optional[dict] = None,
+    commit: bool = True
 ) -> OperationLog:
-    """记录操作日志"""
+    """记录操作日志
+
+    commit=False 时只 flush 不提交，供调用方在同一事务内统一提交，保证原子性。
+    """
     log = OperationLog(
         user_id=user_id,
         operation_type=operation_type,
@@ -24,8 +28,11 @@ def log_operation(
         created_at=datetime.utcnow()
     )
     db.add(log)
-    db.commit()
-    db.refresh(log)
+    if commit:
+        db.commit()
+        db.refresh(log)
+    else:
+        db.flush()
     return log
 
 

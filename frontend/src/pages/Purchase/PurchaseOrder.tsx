@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react'
 import { Card, Table, Button, Input, InputNumber, Space, Select, AutoComplete, Tag, Divider, message, Row, Col, Statistic } from 'antd'
-import { PlusOutlined, DeleteOutlined, ScanOutlined, SearchOutlined } from '@ant-design/icons'
+import { DeleteOutlined, ScanOutlined, SearchOutlined } from '@ant-design/icons'
 import { purchaseApi } from '../../services/purchaseApi'
 import { inventoryApi } from '../../services/inventoryApi'
 import { usePrivacyStore } from '../../stores/privacyStore'
@@ -75,7 +75,7 @@ export default function PurchaseOrder() {
     try {
       const res = await inventoryApi.scanProduct(code)
       if (res.data) {
-        const product = res.data as Product
+        const product = res.data as unknown as Product
         addItem(product)
         message.success(`已添加: ${product.name}`)
         return true

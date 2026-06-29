@@ -39,7 +39,8 @@ class SalesOrder(Base):
     # 金额信息
     total_amount = Column(Numeric(10, 2), default=0, comment="总金额")
     discount_amount = Column(Numeric(10, 2), default=0, comment="优惠金额")
-    final_amount = Column(Numeric(10, 2), default=0, comment="最终金额")
+    subsidy_amount = Column(Numeric(10, 2), default=0, comment="国补金额（政府返款，客户少付）")
+    final_amount = Column(Numeric(10, 2), default=0, comment="最终金额（客户实付=总额-优惠-国补）")
     payment_status = Column(String(20), default=PaymentStatus.UNPAID.value, comment="收款状态")
     status = Column(String(20), default=OrderStatus.ACTIVE.value, comment="订单状态")
     remark = Column(String(255), comment="备注")
@@ -83,6 +84,7 @@ class SalesOrderItem(Base):
     # 数量和金额
     quantity = Column(Integer, nullable=False, comment="数量")
     unit_price = Column(Numeric(10, 2), nullable=False, comment="单价")
+    cost_price = Column(Numeric(10, 2), default=0, comment="成交时进货成本快照")
     subtotal = Column(Numeric(10, 2), nullable=False, comment="小计")
 
     order = relationship("SalesOrder", back_populates="items")

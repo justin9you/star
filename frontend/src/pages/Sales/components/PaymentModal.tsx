@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Modal, Form, Select, InputNumber, Button, Space, Divider, message } from 'antd'
+import { Modal, Select, InputNumber, Button, Divider, message } from 'antd'
 import { PlusOutlined, DeleteOutlined } from '@ant-design/icons'
 import { salesApi } from '../../../services/salesApi'
 import { PAYMENT_METHODS } from '../../../types/sales'
@@ -23,6 +23,7 @@ export default function PaymentModal({ open, orderId, finalAmount, onSuccess, on
   const [payments, setPayments] = useState<PaymentItem[]>([{ payment_method: '现金', amount: 0, remark: '' }])
   const [existingPayments, setExistingPayments] = useState<{ id: number; payment_method: string; amount: number; remark?: string; created_at: string; created_by_name?: string }[]>([])
   const [existingTotal, setExistingTotal] = useState(0)
+  const [loadFailed, setLoadFailed] = useState(false)
 
   useEffect(() => {
     if (open) {
@@ -32,6 +33,7 @@ export default function PaymentModal({ open, orderId, finalAmount, onSuccess, on
   }, [open, orderId])
 
   const loadExistingPayments = async () => {
+    setLoadFailed(false)
     try {
       const res = await salesApi.getPayments(orderId)
       if (res.data) {
@@ -39,13 +41,15 @@ export default function PaymentModal({ open, orderId, finalAmount, onSuccess, on
         setExistingTotal(res.data.total_paid || 0)
       }
     } catch {
-      // 忽略错误
+      // 加载失败时不能信任已收款金额，禁止本次收款以免重复超收
+      setLoadFailed(true)
+      message.error('已收款记录加载失败，请重试后再收款')
     }
   }
 
   const totalNew = payments.reduce((sum, p) => sum + (p.amount || 0), 0)
   const remaining = finalAmount - existingTotal
-  const isValid = totalNew > 0 && totalNew <= remaining
+  const isValid = !loadFailed && totalNew > 0 && totalNew <= remaining
 
   const addPayment = () => {
     setPayments([...payments, { payment_method: '现金', amount: 0, remark: '' }])

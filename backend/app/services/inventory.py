@@ -407,7 +407,7 @@ def delete_product(db: Session, product_id: int, user_id: int = 1) -> None:
 # ==================== 库存管理 ====================
 
 def get_or_create_inventory(db: Session, product_id: int, warehouse_id: int,
-                            min_quantity: int = 10) -> Inventory:
+                            min_quantity: int = 10, commit: bool = True) -> Inventory:
     inv = db.query(Inventory).filter(
         Inventory.product_id == product_id,
         Inventory.warehouse_id == warehouse_id
@@ -416,15 +416,22 @@ def get_or_create_inventory(db: Session, product_id: int, warehouse_id: int,
     if not inv:
         inv = Inventory(product_id=product_id, warehouse_id=warehouse_id, quantity=0, min_quantity=min_quantity)
         db.add(inv)
-        db.commit()
-        db.refresh(inv)
+        if commit:
+            db.commit()
+            db.refresh(inv)
+        else:
+            db.flush()
     return inv
 
 
 def stock_in(db: Session, product_id: int, warehouse_id: int, quantity: int,
              purchase_price=None, user_id: int = 1, is_gift: bool = False,
-             reason: str = "采购入库") -> Inventory:
-    """入库操作，支持搭送库存"""
+             reason: str = "采购入库", commit: bool = True) -> Inventory:
+    """入库操作，支持搭送库存
+
+    commit=False 时不提交事务，供 create_order/进货等编排函数在同一事务内统一
+    提交，保证库存变更与订单写入的原子性。
+    """
     if quantity <= 0:
         raise ValueError("入库数量必须大于0")
 
@@ -435,7 +442,7 @@ def stock_in(db: Session, product_id: int, warehouse_id: int, quantity: int,
     if not warehouse:
         raise ValueError("仓库不存在")
 
-    inv = get_or_create_inventory(db, product_id, warehouse_id)
+    inv = get_or_create_inventory(db, product_id, warehouse_id, commit=commit)
     before_quantity = inv.quantity
     before_gift = inv.gift_quantity
 
@@ -450,19 +457,27 @@ def stock_in(db: Session, product_id: int, warehouse_id: int, quantity: int,
     if purchase_price is not None and not is_gift:
         product.purchase_price = purchase_price
 
-    db.commit()
-    db.refresh(inv)
+    if commit:
+        db.commit()
+        db.refresh(inv)
+    else:
+        db.flush()
 
     log_operation(db, user_id, reason,
                   f"商品 {product.name} 入库 {quantity}{'(搭送)' if is_gift else ''} 到 {warehouse.name}",
                   before_data={"quantity": before_quantity, "gift_quantity": before_gift},
-                  after_data={"quantity": inv.quantity, "gift_quantity": inv.gift_quantity, "warehouse": warehouse.name})
+                  after_data={"quantity": inv.quantity, "gift_quantity": inv.gift_quantity, "warehouse": warehouse.name},
+                  commit=commit)
     return inv
 
 
 def stock_out(db: Session, product_id: int, warehouse_id: int, quantity: int,
-              user_id: int = 1, is_gift: bool = False, reason: str = "销售出库") -> Inventory:
-    """出库操作，正常出库优先消耗搭送库存，作废出库按 is_gift 精确扣减"""
+              user_id: int = 1, is_gift: bool = False, reason: str = "销售出库",
+              commit: bool = True) -> Inventory:
+    """出库操作，正常出库优先消耗搭送库存，作废出库按 is_gift 精确扣减
+
+    commit=False 时不提交事务，供编排函数在同一事务内统一提交，保证原子性。
+    """
     if quantity <= 0:
         raise ValueError("出库数量必须大于0")
 
@@ -497,15 +512,19 @@ def stock_out(db: Session, product_id: int, warehouse_id: int, quantity: int,
             inv.quantity -= remaining
 
     inv.updated_at = datetime.utcnow()
-    db.commit()
-    db.refresh(inv)
+    if commit:
+        db.commit()
+        db.refresh(inv)
+    else:
+        db.flush()
 
     product = get_product(db, product_id)
     warehouse = get_warehouse(db, warehouse_id)
     log_operation(db, user_id, reason,
                   f"商品 {product.name if product else product_id} 从 {warehouse.name if warehouse else warehouse_id} 出库 {quantity}",
                   before_data={"quantity": before_quantity, "gift_quantity": before_gift},
-                  after_data={"quantity": inv.quantity, "gift_quantity": inv.gift_quantity})
+                  after_data={"quantity": inv.quantity, "gift_quantity": inv.gift_quantity},
+                  commit=commit)
     return inv
 
 

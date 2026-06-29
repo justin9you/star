@@ -10,6 +10,7 @@ interface DailySales {
   total_quantity: number
   total_orders: number
   total_amount: number
+  subsidy_amount: number
   paid_amount: number
 }
 
@@ -155,6 +156,17 @@ export default function DailyReport() {
                 prefix={isPrivacyMode ? '' : <RiseOutlined />}
                 precision={isPrivacyMode ? undefined : 2}
                 valueStyle={{ color: '#cf1322' }}
+              />
+            </Card>
+          </Col>
+          <Col xs={24} sm={12} md={6}>
+            <Card>
+              <Statistic
+                title="今日国补"
+                value={isPrivacyMode ? '***' : (dailySales?.subsidy_amount || 0)}
+                prefix={isPrivacyMode ? '' : <DollarOutlined />}
+                precision={isPrivacyMode ? undefined : 2}
+                valueStyle={{ color: '#722ed1' }}
               />
             </Card>
           </Col>

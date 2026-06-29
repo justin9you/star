@@ -22,6 +22,7 @@ export interface SalesOrderState {
   selectedCustomerId: number | null
   orderItems: OrderItem[]
   discountAmount: number
+  subsidyAmount: number
   orderRemark: string
   oldAppliances: OldApplianceCreate[]
 }

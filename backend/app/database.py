@@ -23,6 +23,10 @@ def get_db():
     db = SessionLocal()
     try:
         yield db
+    except Exception:
+        # 请求处理出错时回滚未提交事务，避免脏数据残留在连接上
+        db.rollback()
+        raise
     finally:
         db.close()
 
@@ -77,16 +81,21 @@ def _migrate_add_columns(engine):
         ("sales_orders", "customer_name", sqlalchemy.String(100)),
         ("sales_orders", "customer_phone", sqlalchemy.String(20)),
         ("sales_orders", "customer_address", sqlalchemy.String(500)),
+        ("sales_orders", "subsidy_amount", sqlalchemy.Numeric(10, 2)),
         ("sales_order_items", "product_name", sqlalchemy.String(200)),
         ("sales_order_items", "product_spec", sqlalchemy.String(100)),
         ("sales_order_items", "product_unit", sqlalchemy.String(20)),
+        ("sales_order_items", "cost_price", sqlalchemy.Numeric(10, 2)),
         ("inventory", "gift_quantity", sqlalchemy.Integer),
     ]
     with engine.connect() as conn:
         for table, column, col_type in new_columns:
             try:
-                col_type_str = col_type().compile(dialect=engine.dialect)
+                # col_type 可能是类型类(如 Integer)或类型实例(如 String(50)/Numeric(10,2))
+                type_obj = col_type() if isinstance(col_type, type) else col_type
+                col_type_str = type_obj.compile(dialect=engine.dialect)
                 conn.execute(sqlalchemy.text(f"ALTER TABLE {table} ADD COLUMN {column} {col_type_str}"))
                 conn.commit()
             except Exception:
+                # 列已存在等情况跳过；ALTER 失败不影响启动
                 pass

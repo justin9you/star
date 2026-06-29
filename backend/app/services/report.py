@@ -27,13 +27,17 @@ def get_daily_sales(db: Session, target_date: Optional[date] = None) -> dict:
 
     total_orders = len(orders)
     total_amount = sum(float(o.final_amount) for o in orders)
+    subsidy_amount = sum(float(o.subsidy_amount or 0) for o in orders)
     total_quantity = 0
     for o in orders:
         for item in o.items:
             total_quantity += item.quantity
 
-    # 今日实收金额（从付款记录统计）
-    payments = db.query(OrderPayment).filter(
+    # 今日实收金额（从付款记录统计，排除已作废订单的付款）
+    payments = db.query(OrderPayment).join(
+        SalesOrder, OrderPayment.order_id == SalesOrder.id
+    ).filter(
+        SalesOrder.status == "有效",
         OrderPayment.created_at >= start,
         OrderPayment.created_at <= end
     ).all()
@@ -44,6 +48,7 @@ def get_daily_sales(db: Session, target_date: Optional[date] = None) -> dict:
         "total_quantity": total_quantity,
         "total_orders": total_orders,
         "total_amount": Decimal(str(total_amount)),
+        "subsidy_amount": Decimal(str(subsidy_amount)),
         "paid_amount": Decimal(str(paid_amount))
     }
 
@@ -63,11 +68,16 @@ def get_profit_stats(db: Session, start_date: date, end_date: date) -> dict:
     cost = Decimal("0")
 
     for o in orders:
-        revenue += o.final_amount
+        # 店里真实收入 = 客户实付 + 国补返款（= 总额 - 优惠），否则利润会被国补低估
+        revenue += o.final_amount + (o.subsidy_amount or Decimal("0"))
         for item in o.items:
-            product = db.query(Product).filter(Product.id == item.product_id).first()
-            if product:
-                cost += product.purchase_price * item.quantity
+            # 优先用成交时的成本快照；旧数据无快照时回退到当前进货价
+            if item.cost_price is not None and item.cost_price > 0:
+                cost += item.cost_price * item.quantity
+            else:
+                product = db.query(Product).filter(Product.id == item.product_id).first()
+                if product:
+                    cost += product.purchase_price * item.quantity
 
     gross_profit = revenue - cost
     gross_margin = float(gross_profit / revenue * 100) if revenue > 0 else 0

@@ -91,7 +91,8 @@ def create_purchase_order(db: Session, warehouse_id: int, items: list[dict],
             item_data["unit_price"] if not item_data["is_gift"] else None,
             user_id,
             is_gift=item_data["is_gift"],
-            reason=f"采购入库-{order_no}"
+            reason=f"采购入库-{order_no}",
+            commit=False
         )
 
     db.commit()
@@ -149,7 +150,8 @@ def cancel_purchase_order(db: Session, order_id: int, user_id: int = 1) -> Purch
             item.quantity,
             user_id,
             is_gift=item.is_gift,
-            reason=f"作废进货单-{order.order_no}"
+            reason=f"作废进货单-{order.order_no}",
+            commit=False
         )
 
     order.status = PurchaseOrderStatus.CANCELLED.value

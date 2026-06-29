@@ -9,6 +9,7 @@ class DailySalesResponse(BaseModel):
     total_quantity: int
     total_orders: int
     total_amount: Decimal
+    subsidy_amount: Decimal = Decimal("0")
 
 
 class ProfitResponse(BaseModel):

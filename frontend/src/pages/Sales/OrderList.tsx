@@ -181,10 +181,6 @@ export default function OrderList() {
     }
   }
 
-  const handleDispatchSuccess = () => {
-    setDispatchModalOpen(false)
-  }
-
   const confirmPrint = (orderId: number) => {
     handlePrint(orderId)
   }
@@ -294,7 +290,8 @@ export default function OrderList() {
     <div class="amount-section">
       <div class="amount-row"><span class="a-label">商品总额</span><span class="a-value">¥${Number(d.total_amount).toFixed(2)}</span></div>
       ${Number(d.discount_amount) > 0 ? `<div class="amount-row"><span class="a-label">优惠金额</span><span class="a-value">-¥${Number(d.discount_amount).toFixed(2)}</span></div>` : ''}
-      <div class="amount-row highlight"><span class="a-label">实收金额</span><span class="a-value">¥${Number(d.final_amount).toFixed(2)}</span></div>
+      ${Number(d.subsidy_amount) > 0 ? `<div class="amount-row"><span class="a-label">国补金额</span><span class="a-value">-¥${Number(d.subsidy_amount).toFixed(2)}</span></div>` : ''}
+      <div class="amount-row highlight"><span class="a-label">客户实付</span><span class="a-value">¥${Number(d.final_amount).toFixed(2)}</span></div>
     </div>
     <div class="cn-amount-row"><span class="a-label">大写金额</span><span class="a-value">${numberToChinese(Number(d.final_amount) || 0)}</span></div>
 
@@ -375,6 +372,10 @@ export default function OrderList() {
     },
     {
       title: '优惠', dataIndex: 'discount_amount', key: 'discount_amount', width: 80,
+      render: (v: number) => v ? `¥${v.toFixed(2)}` : '-'
+    },
+    {
+      title: '国补', dataIndex: 'subsidy_amount', key: 'subsidy_amount', width: 80,
       render: (v: number) => v ? `¥${v.toFixed(2)}` : '-'
     },
     {
@@ -498,6 +499,7 @@ export default function OrderList() {
               <Descriptions.Item label="地址" span={2}>{detailOrder.customer_address || '-'}</Descriptions.Item>
               <Descriptions.Item label="总金额">¥{detailOrder.total_amount?.toFixed(2)}</Descriptions.Item>
               <Descriptions.Item label="优惠">¥{detailOrder.discount_amount?.toFixed(2)}</Descriptions.Item>
+              <Descriptions.Item label="国补">¥{(detailOrder.subsidy_amount || 0).toFixed(2)}</Descriptions.Item>
               <Descriptions.Item label="实收"><strong>¥{detailOrder.final_amount?.toFixed(2)}</strong></Descriptions.Item>
               <Descriptions.Item label="付款状态">
                 <Tag color={PAYMENT_STATUS_MAP[detailOrder.payment_status]?.color}>

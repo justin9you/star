@@ -1,4 +1,4 @@
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from typing import Optional
 from decimal import Decimal
 from sqlalchemy.orm import Session
@@ -88,6 +88,7 @@ def generate_order_no(db: Session) -> str:
 
 def create_order(db: Session, customer_id: int, items: list[dict],
                  discount_amount: Decimal = Decimal("0"),
+                 subsidy_amount: Decimal = Decimal("0"),
                  old_appliances: Optional[list[dict]] = None,
                  remark: Optional[str] = None, user_id: int = 1,
                  default_warehouse_id: int = 1) -> SalesOrder:
@@ -122,7 +123,7 @@ def create_order(db: Session, customer_id: int, items: list[dict],
         subtotal = unit_price * item["quantity"]
         total_amount += subtotal
 
-        # 保存商品快照信息
+        # 保存商品快照信息（含成交时进货成本，避免日后改进货价导致历史利润失真）
         order_items.append({
             "product_id": item["product_id"],
             "product_name": product.name,
@@ -130,10 +131,16 @@ def create_order(db: Session, customer_id: int, items: list[dict],
             "product_unit": product.unit,
             "quantity": item["quantity"],
             "unit_price": unit_price,
+            "cost_price": Decimal(str(product.purchase_price or 0)),
             "subtotal": subtotal
         })
 
-    final_amount = total_amount - discount_amount
+    # 客户实付 = 总额 - 优惠 - 国补（国补由政府/平台返款，店里另收）
+    discount_amount = Decimal(str(discount_amount or 0))
+    subsidy_amount = Decimal(str(subsidy_amount or 0))
+    final_amount = total_amount - discount_amount - subsidy_amount
+    if final_amount < 0:
+        raise ValueError("优惠和国补之和不能超过商品总额")
     order_no = generate_order_no(db)
 
     # 创建订单（包含客户快照）
@@ -145,6 +152,7 @@ def create_order(db: Session, customer_id: int, items: list[dict],
         customer_address=customer_address,
         total_amount=total_amount,
         discount_amount=discount_amount,
+        subsidy_amount=subsidy_amount,
         final_amount=final_amount,
         payment_status=PaymentStatus.UNPAID.value,
         status=OrderStatus.ACTIVE.value,
@@ -163,6 +171,7 @@ def create_order(db: Session, customer_id: int, items: list[dict],
             product_unit=item_data["product_unit"],
             quantity=item_data["quantity"],
             unit_price=item_data["unit_price"],
+            cost_price=item_data["cost_price"],
             subtotal=item_data["subtotal"]
         )
         db.add(db_item)
@@ -186,7 +195,7 @@ def create_order(db: Session, customer_id: int, items: list[dict],
             gift_before = inv.gift_quantity or 0
             normal_before = inv.quantity or 0
 
-            inventory_service.stock_out(db, item_data["product_id"], inv.warehouse_id, deduct, user_id, reason=f"销售出库-订单{order_no}")
+            inventory_service.stock_out(db, item_data["product_id"], inv.warehouse_id, deduct, user_id, reason=f"销售出库-订单{order_no}", commit=False)
 
             # 记录流水：判断本次扣减消耗了多少搭送和多少正常库存
             gift_consumed = gift_before - (inv.gift_quantity or 0)
@@ -253,8 +262,16 @@ def get_orders(db: Session, page: int = 1, page_size: int = 20,
     if status:
         query = query.filter(SalesOrder.status == status)
     if order_date:
-        # 按日期筛选（只匹配年月日）
-        query = query.filter(SalesOrder.created_at.startswith(order_date))
+        # 按日期筛选（当天 00:00 <= created_at < 次日 00:00），不依赖字符串格式
+        try:
+            day = datetime.strptime(order_date, "%Y-%m-%d").date()
+            day_start = datetime.combine(day, datetime.min.time())
+            query = query.filter(
+                SalesOrder.created_at >= day_start,
+                SalesOrder.created_at < day_start + timedelta(days=1)
+            )
+        except ValueError:
+            pass
     total = query.count()
     orders = query.order_by(SalesOrder.id.desc()).offset((page - 1) * page_size).limit(page_size).all()
     return orders, total
@@ -283,7 +300,7 @@ def cancel_order(db: Session, order_id: int, user_id: int = 1, default_warehouse
             inventory_service.stock_in(
                 db, ledger.product_id, ledger.warehouse_id, rollback_qty,
                 user_id=user_id, is_gift=ledger.is_gift,
-                reason=f"订单作废回滚-订单{order.order_no}"
+                reason=f"订单作废回滚-订单{order.order_no}", commit=False
             )
             # 记录回滚流水
             rollback_ledger = StockLedger(
@@ -299,7 +316,7 @@ def cancel_order(db: Session, order_id: int, user_id: int = 1, default_warehouse
     else:
         # 兼容旧数据（没有流水记录的订单），回滚到默认仓库
         for item in order.items:
-            inventory_service.stock_in(db, item.product_id, default_warehouse_id, item.quantity, user_id=user_id)
+            inventory_service.stock_in(db, item.product_id, default_warehouse_id, item.quantity, user_id=user_id, commit=False)
 
     order.status = OrderStatus.CANCELLED.value
     order.updated_at = datetime.utcnow()

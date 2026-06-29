@@ -94,6 +94,7 @@ class SalesOrderCreate(BaseModel):
     customer_id: int
     items: List[SalesOrderItemCreate]
     discount_amount: Optional[Decimal] = Decimal("0")
+    subsidy_amount: Optional[Decimal] = Decimal("0")
     old_appliances: Optional[List[OldApplianceCreate]] = None
     remark: Optional[str] = None
 
@@ -102,6 +103,7 @@ class SalesOrderUpdate(BaseModel):
     customer_id: Optional[int] = None
     items: Optional[List[SalesOrderItemCreate]] = None
     discount_amount: Optional[Decimal] = None
+    subsidy_amount: Optional[Decimal] = None
     payment_status: Optional[str] = None
     remark: Optional[str] = None
 
@@ -133,6 +135,7 @@ class SalesOrderResponse(BaseModel):
     customer_address: Optional[str] = None
     total_amount: Decimal
     discount_amount: Decimal
+    subsidy_amount: Decimal = Decimal("0")
     final_amount: Decimal
     payment_status: str
     status: str
