@@ -60,20 +60,19 @@ export default function SalesOrder() {
   }
 
   return (
-    <div>
-      <Card title="销售开单" style={{ marginBottom: 16 }}>
-        <Steps
-          current={currentStep}
-          onChange={(step) => {
-            if (step < currentStep) setCurrentStep(step)
-          }}
-          items={[
-            { title: '选择客户', icon: <UserOutlined /> },
-            { title: '选择商品', icon: <ShoppingCartOutlined /> },
-            { title: '确认开单', icon: <CheckOutlined /> },
-          ]}
-        />
-      </Card>
+    <Card title="销售开单">
+      <Steps
+        current={currentStep}
+        onChange={(step) => {
+          if (step < currentStep) setCurrentStep(step)
+        }}
+        style={{ maxWidth: 720, margin: '4px auto 28px' }}
+        items={[
+          { title: '选择客户', icon: <UserOutlined /> },
+          { title: '选择商品', icon: <ShoppingCartOutlined /> },
+          { title: '确认开单', icon: <CheckOutlined /> },
+        ]}
+      />
 
       {currentStep === 0 && (
         <CustomerStep
@@ -90,6 +89,6 @@ export default function SalesOrder() {
       {currentStep === 2 && (
         <ConfirmStep {...stepProps} />
       )}
-    </div>
+    </Card>
   )
 }

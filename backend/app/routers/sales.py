@@ -131,7 +131,7 @@ async def list_orders(
             "final_amount": float(o.final_amount), "payment_status": o.payment_status,
             "paid_amount": float(sales_service.get_payment_total(db, o.id)),
             "status": o.status, "remark": o.remark, "created_at": o.created_at.isoformat(),
-            "created_by": o.created_by, "created_by_name": o.creator.username if o.creator else None,
+            "created_by": o.created_by, "created_by_name": (o.creator.name or o.creator.username) if o.creator else None,
             "cancel_reason": o.cancel_reason,
             "cancelled_at": o.cancelled_at.isoformat() if o.cancelled_at else None
         })
@@ -197,7 +197,7 @@ async def get_order(order_id: int, db: Session = Depends(get_db)):
     payments = [{
         "id": p.id, "payment_method": p.payment_method, "amount": float(p.amount),
         "remark": p.remark, "created_at": p.created_at.isoformat(),
-        "created_by_name": p.creator.username if p.creator else None
+        "created_by_name": (p.creator.name or p.creator.username) if p.creator else None
     } for p in o.payments]
 
     return ResponseModel(data={
@@ -208,10 +208,10 @@ async def get_order(order_id: int, db: Session = Depends(get_db)):
         "final_amount": float(o.final_amount), "payment_status": o.payment_status,
         "paid_amount": paid_amount,
         "status": o.status, "remark": o.remark, "created_at": o.created_at.isoformat(),
-        "created_by": o.created_by, "created_by_name": o.creator.username if o.creator else None,
+        "created_by": o.created_by, "created_by_name": (o.creator.name or o.creator.username) if o.creator else None,
         "cancel_reason": o.cancel_reason,
         "cancelled_at": o.cancelled_at.isoformat() if o.cancelled_at else None,
-        "cancelled_by_name": o.canceller.username if o.canceller else None,
+        "cancelled_by_name": (o.canceller.name or o.canceller.username) if o.canceller else None,
         "items": items, "old_appliances": old_appliances, "payments": payments
     })
 
@@ -327,7 +327,7 @@ async def get_payments(order_id: int, db: Session = Depends(get_db)):
             "amount": float(p.amount),
             "remark": p.remark,
             "created_at": p.created_at.isoformat(),
-            "created_by_name": p.creator.username if p.creator else None
+            "created_by_name": (p.creator.name or p.creator.username) if p.creator else None
         } for p in payments],
         "total_paid": float(total)
     })

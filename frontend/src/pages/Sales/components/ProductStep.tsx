@@ -1,23 +1,17 @@
 import { useState, useRef, useEffect } from 'react'
-import { Card, Table, Button, Input, InputNumber, Space, Modal, Form, Row, Col, Divider, Alert, message, AutoComplete, Select } from 'antd'
+import { Table, Button, Input, InputNumber, Modal, Form, Row, Col, Divider, Alert, message, AutoComplete, Select } from 'antd'
 import { SwapOutlined, ScanOutlined, DeleteOutlined, PlusOutlined, SearchOutlined } from '@ant-design/icons'
 import { inventoryApi } from '../../../services/inventoryApi'
 import { usePrivacyStore } from '../../../stores/privacyStore'
 import type { StepProps, OrderItem, SalesOrderState } from '../types'
 import type { ProductCreate } from '../../../types/inventory'
+import { StepFooter } from './StepFooter'
 
 const ITEM_COLUMNS = [
   { title: '商品名称', dataIndex: 'product_name', key: 'product_name' },
   { title: '单位', dataIndex: 'unit', key: 'unit', width: 70, align: 'center' as const },
   { title: '单价', dataIndex: 'unit_price', key: 'unit_price', width: 110, align: 'right' as const, render: (v: number) => `¥${v.toFixed(2)}` },
   { title: '小计', dataIndex: 'subtotal', key: 'subtotal', width: 120, align: 'right' as const, render: (v: number) => `¥${v.toFixed(2)}` },
-]
-
-const OLD_COLUMNS = [
-  { title: '旧电器类型', dataIndex: 'category', key: 'category' },
-  { title: '品牌', dataIndex: 'brand', key: 'brand' },
-  { title: '成色', dataIndex: 'condition', key: 'condition' },
-  { title: '回收价', dataIndex: 'recycle_price', key: 'recycle_price', render: (v: number) => v ? `¥${v.toFixed(2)}` : '-' },
 ]
 
 interface ProductStepProps extends StepProps {
@@ -185,6 +179,13 @@ export function ProductStep({ state, onStateChange, onNext, onPrev, onProductsUp
     onStateChange({ oldAppliances: state.oldAppliances.filter((_, i) => i !== index) })
   }
 
+  const handleOldPriceChange = (index: number, price: number) => {
+    const p = price < 0 ? 0 : price
+    onStateChange({
+      oldAppliances: state.oldAppliances.map((o, i) => i === index ? { ...o, recycle_price: p } : o),
+    })
+  }
+
   const handleAddProductSubmit = async () => {
     try {
       const values = await productForm.validateFields()
@@ -220,7 +221,22 @@ export function ProductStep({ state, onStateChange, onNext, onPrev, onProductsUp
   ]
 
   const oldColumnsWithActions = [
-    ...OLD_COLUMNS,
+    { title: '旧电器类型', dataIndex: 'category', key: 'category' },
+    {
+      title: '抵扣价', dataIndex: 'recycle_price', key: 'recycle_price', width: 160,
+      render: (v: number, _record: unknown, index: number) => (
+        <InputNumber
+          min={0}
+          precision={2}
+          prefix="¥"
+          size="small"
+          value={v}
+          onChange={(val) => handleOldPriceChange(index, val ?? 0)}
+          style={{ width: 130 }}
+        />
+      ),
+    },
+    { title: '备注', dataIndex: 'remark', key: 'remark', render: (v: string) => v || '-' },
     {
       title: '', key: 'action', width: 60,
       render: (_: unknown, __: unknown, index: number) => (
@@ -253,17 +269,13 @@ export function ProductStep({ state, onStateChange, onNext, onPrev, onProductsUp
   }
 
   return (
-    <Card
-      title="选择商品"
-      extra={
-        <Button icon={<SwapOutlined />} onClick={() => setOldApplianceModalOpen(true)}>添加旧电器</Button>
-      }
-    >
-      {/* 统一输入区：扫码 + 搜索 */}
-      <div style={{ marginBottom: 16 }}>
+    <>
+      {/* 统一输入区：扫码 + 搜索 + 添加旧电器 */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, marginBottom: 16 }}>
+        <div style={{ flex: 1, maxWidth: 500 }}>
         <AutoComplete
           ref={inputRef}
-          style={{ width: '100%', maxWidth: 500 }}
+          style={{ width: '100%' }}
           value={inputValue}
           options={options}
           onSearch={handleInputChange}
@@ -297,6 +309,8 @@ export function ProductStep({ state, onStateChange, onNext, onPrev, onProductsUp
         <div className="scan-hint" style={{ marginTop: 8 }}>
           支持扫码枪直接扫描，或输入商品名称搜索选择
         </div>
+        </div>
+        <Button icon={<SwapOutlined />} onClick={() => setOldApplianceModalOpen(true)}>添加旧电器</Button>
       </div>
 
       {/* 无货警告 */}
@@ -339,14 +353,12 @@ export function ProductStep({ state, onStateChange, onNext, onPrev, onProductsUp
         </>
       )}
 
-      <div style={{ marginTop: 16 }}>
-        <Space>
-          <Button onClick={onPrev}>上一步</Button>
-          <Button type="primary" disabled={state.orderItems.length === 0} onClick={onNext}>
-            下一步：确认开单
-          </Button>
-        </Space>
-      </div>
+      <StepFooter>
+        <Button size="large" onClick={onPrev}>上一步</Button>
+        <Button type="primary" size="large" disabled={state.orderItems.length === 0} onClick={onNext}>
+          下一步：确认开单
+        </Button>
+      </StepFooter>
 
       {/* 添加旧电器弹窗 */}
       <Modal
@@ -361,21 +373,11 @@ export function ProductStep({ state, onStateChange, onNext, onPrev, onProductsUp
           <Form.Item name="category" label="旧电器类型" rules={[{ required: true, message: '请输入类型' }]}>
             <Input placeholder="如：旧冰箱、旧空调" autoComplete="off" />
           </Form.Item>
-          <Form.Item name="brand" label="品牌">
-            <Input placeholder="请输入品牌" autoComplete="off" />
-          </Form.Item>
-          <Form.Item name="condition" label="成色">
-            <Select placeholder="请选择成色" options={[
-              { value: '新', label: '新' },
-              { value: '旧', label: '旧' },
-              { value: '差', label: '差' },
-            ]} />
-          </Form.Item>
-          <Form.Item name="recycle_price" label="回收价">
+          <Form.Item name="recycle_price" label="抵扣价">
             <InputNumber prefix="¥" min={0} precision={2} style={{ width: '100%' }} />
           </Form.Item>
           <Form.Item name="remark" label="备注">
-            <Input placeholder="请输入备注" autoComplete="off" />
+            <Input placeholder="如：型号、新旧程度、外观等" autoComplete="off" />
           </Form.Item>
         </Form>
       </Modal>
@@ -422,6 +424,6 @@ export function ProductStep({ state, onStateChange, onNext, onPrev, onProductsUp
           </Form.Item>
         </Form>
       </Modal>
-    </Card>
+    </>
   )
 }

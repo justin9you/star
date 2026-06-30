@@ -200,139 +200,129 @@ export default function OrderList() {
 
   const buildReceiptHtml = (d: Record<string, unknown>) => {
     const items = (d.items as Array<{ product_name: string; product_spec?: string; product_unit?: string; quantity: number; unit_price: number; subtotal: number }>) || []
-    const oldItems = (d.old_appliances as Array<{ category: string; brand?: string; condition?: string; recycle_price: number }>) || []
+    const oldItems = (d.old_appliances as Array<{ category: string; recycle_price: number; remark?: string }>) || []
+    const shopMeta = [d.shop_address, d.shop_phone ? '电话 ' + d.shop_phone : '']
+      .filter(Boolean).join('　·　')
     return `<!DOCTYPE html>
-<html><head><title>收据 - ${d.order_no || ''}</title>
+<html><head><title>销售单 - ${d.order_no || ''}</title>
 <style>
-  @page { size: A4; margin: 15mm; }
+  @page { size: A4; margin: 16mm; }
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: "SimSun", "Microsoft YaHei", serif; font-size: 14px; color: #000; }
-  .receipt { width: 100%; max-width: 680px; margin: 0 auto; border: 2px solid #000; padding: 0; }
-  .title-bar { text-align: center; padding: 16px 20px 12px; border-bottom: 2px solid #000; }
-  .title-bar h1 { font-size: 22px; font-weight: bold; letter-spacing: 8px; }
-  .title-bar .sub { font-size: 12px; margin-top: 4px; color: #333; }
-  .body { padding: 12px 20px; }
-  .info-row { display: flex; line-height: 2; font-size: 14px; }
-  .info-row .label { width: 70px; text-align: justify; text-align-last: justify; flex-shrink: 0; }
-  .info-row .value { flex: 1; border-bottom: 1px solid #000; margin-left: 4px; padding: 0 4px; min-width: 0; }
-  .info-row .value-half { width: 48%; border-bottom: 1px solid #000; margin-left: 4px; padding: 0 4px; }
-  .info-group { display: flex; gap: 24px; }
-  .items-title { font-size: 14px; font-weight: bold; margin: 12px 0 6px; }
-  .items-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  .items-table th, .items-table td { border: 1px solid #000; padding: 5px 8px; text-align: center; }
-  .items-table th { background: #f5f5f5; font-weight: bold; }
-  .items-table .name-col { text-align: left; width: 35%; }
-  .items-table .num-col { width: 12%; }
-  .items-table .price-col { width: 16%; text-align: right; }
-  .items-table .sub-col { width: 16%; text-align: right; }
-  .amount-section { margin-top: 12px; border: 1px solid #000; }
-  .amount-row { display: flex; border-bottom: 1px solid #000; line-height: 2.2; font-size: 14px; }
-  .amount-row:last-child { border-bottom: none; }
-  .amount-row .a-label { width: 100px; text-align: center; border-right: 1px solid #000; flex-shrink: 0; font-weight: bold; }
-  .amount-row .a-value { flex: 1; padding: 0 12px; text-align: right; }
-  .amount-row.highlight { background: #f5f5f5; }
-  .amount-row.highlight .a-value { font-size: 16px; font-weight: bold; }
-  .cn-amount-row { display: flex; line-height: 2.2; font-size: 14px; border: 1px solid #000; border-top: none; }
-  .cn-amount-row .a-label { width: 100px; text-align: center; border-right: 1px solid #000; flex-shrink: 0; font-weight: bold; }
-  .cn-amount-row .a-value { flex: 1; padding: 0 12px; }
-  .old-section { margin-top: 12px; }
-  .old-section .section-title { font-size: 14px; font-weight: bold; margin-bottom: 6px; }
-  .old-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  .old-table th, .old-table td { border: 1px solid #000; padding: 4px 8px; text-align: center; }
-  .old-table th { background: #f5f5f5; font-weight: bold; }
-  .old-table .price-col { text-align: right; }
-  .remark-row { display: flex; margin-top: 12px; line-height: 2; font-size: 14px; }
-  .remark-row .label { width: 70px; text-align: justify; text-align-last: justify; flex-shrink: 0; }
-  .remark-row .value { flex: 1; border-bottom: 1px solid #000; margin-left: 4px; padding: 0 4px; }
-  .sign-section { margin-top: 32px; display: flex; justify-content: space-between; font-size: 14px; }
-  .sign-section .sign-item { width: 45%; }
-  .sign-section .sign-line { border-bottom: 1px solid #000; display: inline-block; width: 120px; margin-left: 8px; }
-  .footer { margin-top: 24px; padding-top: 8px; border-top: 1px solid #000; display: flex; justify-content: space-between; font-size: 12px; color: #333; }
-  @media print { body { width: 100%; } .receipt { border: 2px solid #000; } }
+  body {
+    font-family: "Microsoft YaHei", "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+    font-size: 13px; color: #1a1a1a; line-height: 1.5;
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+  }
+  .receipt { width: 100%; max-width: 720px; margin: 0 auto; }
+  .r-head { display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 14px; border-bottom: 2px solid #1a1a1a; }
+  .r-shop .name { font-size: 24px; font-weight: 800; letter-spacing: 2px; }
+  .r-shop .meta { margin-top: 6px; font-size: 12px; color: #777; }
+  .r-doc { text-align: right; flex-shrink: 0; padding-left: 24px; }
+  .r-doc .doc-title { font-size: 20px; font-weight: 700; letter-spacing: 6px; }
+  .r-doc .doc-no { margin-top: 8px; font-size: 12px; color: #555; }
+  .r-doc .doc-no b { color: #1a1a1a; font-weight: 700; }
+  .r-info { display: flex; flex-wrap: wrap; gap: 6px 36px; padding: 14px 2px; border-bottom: 1px solid #e2e2e2; font-size: 13px; }
+  .r-info .cell { min-width: 38%; }
+  .r-info .full { width: 100%; }
+  .r-info .k { color: #999; margin-right: 10px; }
+  .sec-title { font-size: 13px; font-weight: 700; margin: 18px 0 8px; padding-left: 10px; position: relative; }
+  .sec-title::before { content: ''; position: absolute; left: 0; top: 2px; bottom: 2px; width: 3px; background: #1a1a1a; }
+  table.items, table.old { width: 100%; border-collapse: collapse; }
+  .items { font-size: 13px; }
+  .items thead th { text-align: left; padding: 9px 10px; border-bottom: 1.5px solid #1a1a1a; font-weight: 700; }
+  .items tbody td { padding: 9px 10px; border-bottom: 1px solid #eee; }
+  .items tbody tr:last-child td { border-bottom: 1.5px solid #1a1a1a; }
+  .spec { color: #999; font-size: 12px; }
+  .c { text-align: center; } .r { text-align: right; font-variant-numeric: tabular-nums; }
+  .totals { display: flex; justify-content: flex-end; margin-top: 16px; }
+  .totals .box { width: 320px; }
+  .totals .row { display: flex; justify-content: space-between; padding: 5px 2px; font-size: 13px; color: #555; }
+  .totals .row .v { font-variant-numeric: tabular-nums; color: #1a1a1a; }
+  .totals .grand { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; padding: 12px 16px; border: 2px solid #1a1a1a; }
+  .totals .grand .lbl { font-weight: 700; font-size: 14px; }
+  .totals .grand .amt { font-size: 22px; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .cn { margin-top: 10px; text-align: right; font-size: 12px; color: #777; }
+  .cn b { color: #1a1a1a; font-weight: 600; }
+  .old th { text-align: left; padding: 7px 10px; border-bottom: 1px solid #1a1a1a; background: #f6f6f6; font-weight: 700; font-size: 12.5px; }
+  .old td { padding: 7px 10px; border-bottom: 1px solid #eee; font-size: 12.5px; }
+  .remark { margin-top: 16px; font-size: 12.5px; color: #444; }
+  .remark .k { color: #999; }
+  .sign { margin-top: 40px; display: flex; gap: 56px; font-size: 13px; }
+  .sign .item { flex: 1; display: flex; align-items: flex-end; color: #555; }
+  .sign .line { flex: 1; border-bottom: 1px solid #1a1a1a; margin-left: 10px; }
+  .note { margin-top: 18px; font-size: 12px; color: #555; letter-spacing: 1px; }
+  .foot { margin-top: 14px; padding-top: 10px; border-top: 1px dashed #ccc; display: flex; justify-content: space-between; font-size: 11px; color: #aaa; }
 </style>
 </head><body>
 <div class="receipt">
-  <div class="title-bar">
-    <h1>收 据</h1>
-    <div class="sub">${d.shop_name || '亚星电子经营部'}${d.shop_address ? '　|　' + d.shop_address : ''}${d.shop_phone ? '　|　' + d.shop_phone : ''}</div>
+  <div class="r-head">
+    <div class="r-shop">
+      <div class="name">${d.shop_name || '亚星电子经营部'}</div>
+      ${shopMeta ? `<div class="meta">${shopMeta}</div>` : ''}
+    </div>
+    <div class="r-doc">
+      <div class="doc-title">销 售 单</div>
+      <div class="doc-no">单号 <b>${d.order_no || ''}</b></div>
+      <div class="doc-no">日期 ${String(d.created_at || '').slice(0, 10)}</div>
+    </div>
   </div>
-  <div class="body">
-    <div class="info-group">
-      <div class="info-row" style="width:48%">
-        <span class="label">客户</span>
-        <span class="value-half">${d.customer_name || ''}</span>
-      </div>
-      <div class="info-row" style="width:48%">
-        <span class="label">单号</span>
-        <span class="value-half">${d.order_no || ''}</span>
-      </div>
-    </div>
-    <div class="info-group" style="margin-top:4px">
-      <div class="info-row" style="width:48%">
-        <span class="label">电话</span>
-        <span class="value-half">${d.customer_phone || ''}</span>
-      </div>
-      <div class="info-row" style="width:48%">
-        <span class="label">日期</span>
-        <span class="value-half">${d.created_at || ''}</span>
-      </div>
-    </div>
-    <div class="info-row" style="margin-top:4px">
-      <span class="label">地址</span>
-      <span class="value">${d.customer_address || ''}</span>
-    </div>
 
-    <div class="items-title">商品明细</div>
-    <table class="items-table">
-      <thead><tr>
-        <th class="name-col">品名</th>
-        <th class="num-col">数量</th>
-        <th class="price-col">单价</th>
-        <th class="sub-col">小计</th>
-      </tr></thead>
-      <tbody>
-      ${items.map(i => `<tr>
-        <td class="name-col">${i.product_name}${i.product_spec ? '（' + i.product_spec + '）' : ''}</td>
-        <td class="num-col">${i.quantity}${i.product_unit || ''}</td>
-        <td class="price-col">${Number(i.unit_price).toFixed(2)}</td>
-        <td class="sub-col">${Number(i.subtotal).toFixed(2)}</td>
-      </tr>`).join('')}
-      </tbody>
-    </table>
+  <div class="r-info">
+    <div class="cell"><span class="k">客户</span>${d.customer_name || ''}</div>
+    <div class="cell"><span class="k">电话</span>${d.customer_phone || ''}</div>
+    <div class="full"><span class="k">地址</span>${d.customer_address || ''}</div>
+  </div>
 
-    <div class="amount-section">
-      <div class="amount-row"><span class="a-label">商品总额</span><span class="a-value">¥${Number(d.total_amount).toFixed(2)}</span></div>
-      ${Number(d.discount_amount) > 0 ? `<div class="amount-row"><span class="a-label">优惠金额</span><span class="a-value">-¥${Number(d.discount_amount).toFixed(2)}</span></div>` : ''}
-      ${Number(d.subsidy_amount) > 0 ? `<div class="amount-row"><span class="a-label">国补金额</span><span class="a-value">-¥${Number(d.subsidy_amount).toFixed(2)}</span></div>` : ''}
-      <div class="amount-row highlight"><span class="a-label">客户实付</span><span class="a-value">¥${Number(d.final_amount).toFixed(2)}</span></div>
+  <div class="sec-title">商品明细</div>
+  <table class="items">
+    <thead><tr>
+      <th>品名</th>
+      <th class="r" style="width:14%">数量</th>
+      <th class="r" style="width:18%">单价</th>
+      <th class="r" style="width:18%">小计</th>
+    </tr></thead>
+    <tbody>
+    ${items.map(i => `<tr>
+      <td>${i.product_name}${i.product_spec ? ' <span class="spec">' + i.product_spec + '</span>' : ''}</td>
+      <td class="r">${i.quantity}${i.product_unit || ''}</td>
+      <td class="r">¥${Number(i.unit_price).toFixed(2)}</td>
+      <td class="r">¥${Number(i.subtotal).toFixed(2)}</td>
+    </tr>`).join('')}
+    </tbody>
+  </table>
+
+  <div class="totals">
+    <div class="box">
+      <div class="row"><span>商品总额</span><span class="v">¥${Number(d.total_amount).toFixed(2)}</span></div>
+      ${Number(d.discount_amount) > 0 ? `<div class="row"><span>优惠金额</span><span class="v">-¥${Number(d.discount_amount).toFixed(2)}</span></div>` : ''}
+      ${Number(d.subsidy_amount) > 0 ? `<div class="row"><span>国补金额</span><span class="v">-¥${Number(d.subsidy_amount).toFixed(2)}</span></div>` : ''}
+      <div class="grand"><span class="lbl">客户实付</span><span class="amt">¥${Number(d.final_amount).toFixed(2)}</span></div>
     </div>
-    <div class="cn-amount-row"><span class="a-label">大写金额</span><span class="a-value">${numberToChinese(Number(d.final_amount) || 0)}</span></div>
+  </div>
+  <div class="cn">大写金额：<b>${numberToChinese(Number(d.final_amount) || 0)}</b></div>
 
-    ${oldItems.length > 0 ? `
-    <div class="old-section">
-      <div class="section-title">以旧换新</div>
-      <table class="old-table">
-        <thead><tr><th>类型</th><th>品牌</th><th>成色</th><th class="price-col">回收价</th></tr></thead>
-        <tbody>
-        ${oldItems.map(o => `<tr><td>${o.category}</td><td>${o.brand || '-'}</td><td>${o.condition || '-'}</td><td class="price-col">¥${Number(o.recycle_price).toFixed(2)}</td></tr>`).join('')}
-        </tbody>
-      </table>
-    </div>
-    ` : ''}
+  ${oldItems.length > 0 ? `
+  <div class="sec-title">以旧换新</div>
+  <table class="old">
+    <thead><tr><th>类型</th><th class="r" style="width:22%">抵扣价</th><th class="r" style="width:34%">备注</th></tr></thead>
+    <tbody>
+    ${oldItems.map(o => `<tr><td>${o.category}</td><td class="r">¥${Number(o.recycle_price).toFixed(2)}</td><td class="r">${o.remark || '-'}</td></tr>`).join('')}
+    </tbody>
+  </table>
+  ` : ''}
 
-    ${d.remark ? `
-    <div class="remark-row"><span class="label">备注</span><span class="value">${d.remark}</span></div>
-    ` : ''}
+  ${d.remark ? `<div class="remark"><span class="k">备注：</span>${d.remark}</div>` : ''}
 
-    <div class="sign-section">
-      <div class="sign-item">收款人：<span class="sign-line"></span></div>
-      <div class="sign-item">客户签字：<span class="sign-line"></span></div>
-    </div>
+  <div class="sign">
+    <div class="item">收款人<span class="line"></span></div>
+    <div class="item">客户签字<span class="line"></span></div>
+  </div>
 
-    <div class="footer">
-      <span>开单时间：${d.created_at || ''}</span>
-      <span>打印时间：${new Date().toLocaleString('zh-CN')}</span>
-    </div>
+  <div class="note">注：本收据经盖章有效。</div>
+
+  <div class="foot">
+    <span>开单时间 ${d.created_at || ''}</span>
+    <span>打印时间 ${new Date().toLocaleString('zh-CN')}</span>
   </div>
 </div>
 </body></html>`
@@ -420,7 +410,7 @@ export default function OrderList() {
     {
       title: '操作', key: 'action', width: 320, fixed: 'right' as const,
       render: (_: unknown, record: SalesOrder) => (
-        <Space size="small" wrap>
+        <Space size="small">
           <Button type="link" size="small" icon={<EyeOutlined />} onClick={() => handleViewDetail(record.id)}>详情</Button>
           <Button type="link" size="small" icon={<PrinterOutlined />} onClick={() => confirmPrint(record.id)}>打印</Button>
           {(record.payment_status === '未付款' || record.payment_status === '部分付款') && record.status === '有效' && (
@@ -569,9 +559,8 @@ export default function OrderList() {
                 <Table
                   columns={[
                     { title: '类型', dataIndex: 'category', key: 'category' },
-                    { title: '品牌', dataIndex: 'brand', key: 'brand' },
-                    { title: '成色', dataIndex: 'condition', key: 'condition' },
-                    { title: '回收价', dataIndex: 'recycle_price', key: 'recycle_price', render: (v: number) => `¥${v.toFixed(2)}` },
+                    { title: '抵扣价', dataIndex: 'recycle_price', key: 'recycle_price', width: 120, render: (v: number) => `¥${v.toFixed(2)}` },
+                    { title: '备注', dataIndex: 'remark', key: 'remark', render: (v: string) => v || '-' },
                   ]}
                   dataSource={detailOrder.old_appliances}
                   rowKey="id"

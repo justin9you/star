@@ -60,5 +60,6 @@ async def get_current_user_info(current_user: User = Depends(get_current_user)):
     return {
         "id": current_user.id,
         "username": current_user.username,
+        "name": current_user.name or current_user.username,
         "created_at": current_user.created_at.isoformat()
     }

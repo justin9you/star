@@ -16,8 +16,9 @@ import {
   PoweroffOutlined,
 } from '@ant-design/icons'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useAuthStore } from '../../stores/authStore'
+import { authApi } from '../../services/authApi'
 import { useElderModeStore } from '../../stores/elderModeStore'
 import { usePrivacyStore } from '../../stores/privacyStore'
 import styles from './MainLayout.module.css'
@@ -36,6 +37,17 @@ const menuItems = [
     label: '销售开单',
   },
   {
+    key: '/sales',
+    icon: <ShoppingCartOutlined />,
+    label: '销售管理',
+    children: [
+      { key: '/sales/customers', label: '客户管理' },
+      { key: '/sales/orders', label: '订单列表' },
+      // 派工单暂时隐藏（仅需销售功能），代码保留，恢复时取消注释即可
+      // { key: '/sales/dispatch', label: '派工单' },
+    ],
+  },
+  {
     key: '/inventory',
     icon: <ShopOutlined />,
     label: '库存管理',
@@ -45,17 +57,6 @@ const menuItems = [
       { key: '/inventory/products', label: '商品管理' },
       { key: '/inventory/warehouses', label: '仓库管理' },
       { key: '/inventory/list', label: '库存查询' },
-    ],
-  },
-  {
-    key: '/sales',
-    icon: <ShoppingCartOutlined />,
-    label: '销售管理',
-    children: [
-      { key: '/sales/customers', label: '客户管理' },
-      { key: '/sales/orders', label: '订单列表' },
-      // 派工单暂时隐藏（仅需销售功能），代码保留，恢复时取消注释即可
-      // { key: '/sales/dispatch', label: '派工单' },
     ],
   },
   {
@@ -72,7 +73,7 @@ const menuItems = [
     icon: <BarChartOutlined />,
     label: '报表统计',
     children: [
-      { key: '/report/daily', label: '今日销售' },
+      { key: '/report/daily', label: '销售报表' },
       { key: '/report/inventory', label: '库存报表' },
     ],
   },
@@ -89,6 +90,15 @@ export default function MainLayout() {
   const { isLoggedIn } = useAuthStore()
   const { isElderMode, toggleElderMode } = useElderModeStore()
   const { isPrivacyMode, togglePrivacyMode } = usePrivacyStore()
+  const [userName, setUserName] = useState('管理员')
+
+  // 读取当前登录用户的显示名
+  useEffect(() => {
+    if (!isLoggedIn) return
+    authApi.getCurrentUser()
+      .then(u => { if (u?.name) setUserName(u.name) })
+      .catch(() => { /* 失败时保留默认显示 */ })
+  }, [isLoggedIn])
 
   // 同步关爱版类名到 body（Modal 等 Portal 组件渲染在 body 下）
   useEffect(() => {
@@ -181,7 +191,7 @@ export default function MainLayout() {
             <span className={styles.headerDivider} />
             <div className={styles.userBox}>
               <Avatar size={32} className={styles.avatar} icon={<UserOutlined />} />
-              <span className={styles.user}>管理员</span>
+              <span className={styles.user}>{userName}</span>
             </div>
             <Tooltip title="退出登录">
               <Button

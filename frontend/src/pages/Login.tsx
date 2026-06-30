@@ -1,11 +1,17 @@
 import { useState, useEffect } from 'react'
 import { Form, Input, Button, Card, message } from 'antd'
-import { UserOutlined, LockOutlined, ShopOutlined, EyeOutlined, EyeInvisibleOutlined } from '@ant-design/icons'
+import { UserOutlined, LockOutlined, EyeOutlined, EyeInvisibleOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../stores/authStore'
 import { useElderModeStore } from '../stores/elderModeStore'
 import { authApi } from '../services/authApi'
 import styles from './Login.module.css'
+
+// 门店经营的品牌（public/band 下的 logo，含扩展名）
+const BRANDS = [
+  'gree.jpeg', 'midea.jpeg', 'haier.jpeg', 'casarte.jpeg', 'changhong.jpeg', 'philips.jpeg',
+  'kinghome.jpeg', 'fotile.jpeg', 'tcl.png', 'samsung.png', 'chiq.png',
+]
 
 export default function Login() {
   const navigate = useNavigate()
@@ -54,12 +60,31 @@ export default function Login() {
         <div className={styles.dot} />
       </div>
 
+      {/* 授权品牌双行滚动 */}
+      <div className={styles.brandMarquee}>
+        <div className={styles.brandWallTitle}>授权销售品牌</div>
+        <div className={`${styles.marqueeRow} ${styles.rowLeft}`}>
+          {[...BRANDS, ...BRANDS].map((b, i) => (
+            <div key={`a${i}`} className={styles.marqueeTile}>
+              <img src={`/band/${b}`} alt={b} />
+            </div>
+          ))}
+        </div>
+        <div className={`${styles.marqueeRow} ${styles.rowRight}`}>
+          {[...[...BRANDS].reverse(), ...[...BRANDS].reverse()].map((b, i) => (
+            <div key={`b${i}`} className={styles.marqueeTile}>
+              <img src={`/band/${b}`} alt={b} />
+            </div>
+          ))}
+        </div>
+      </div>
+
       <Card className={styles.card} title="亚星电子销售管理系统">
         <div className={styles.logoWrap}>
-          <div className={styles.logoIcon}>
-            <ShopOutlined />
-          </div>
+          <div className={styles.logoIcon}>亚</div>
         </div>
+
+        <div className={styles.subtitle}>YAXING&nbsp;·&nbsp;门店销售管理</div>
 
         <Form
           name="login"

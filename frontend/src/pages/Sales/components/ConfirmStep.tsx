@@ -1,10 +1,18 @@
-import { useState } from 'react'
-import { Card, Table, Descriptions, Row, Col, Statistic, Input, InputNumber, Space, Button, Divider, App } from 'antd'
+import { useState, type CSSProperties } from 'react'
+import { Table, Descriptions, Row, Col, Input, InputNumber, Button, Divider, App } from 'antd'
 import { CheckOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
 import { salesApi } from '../../../services/salesApi'
+import { StepFooter } from './StepFooter'
 import type { StepProps } from '../types'
 import type { SalesOrderItemCreate } from '../../../types/sales'
+
+const settleRow: CSSProperties = {
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  marginBottom: 14,
+}
 
 const ITEM_COLUMNS = [
   { title: '商品名称', dataIndex: 'product_name', key: 'product_name' },
@@ -16,9 +24,8 @@ const ITEM_COLUMNS = [
 
 const OLD_COLUMNS = [
   { title: '旧电器类型', dataIndex: 'category', key: 'category' },
-  { title: '品牌', dataIndex: 'brand', key: 'brand' },
-  { title: '成色', dataIndex: 'condition', key: 'condition' },
-  { title: '回收价', dataIndex: 'recycle_price', key: 'recycle_price', render: (v: number) => v ? `¥${v.toFixed(2)}` : '-' },
+  { title: '抵扣价', dataIndex: 'recycle_price', key: 'recycle_price', width: 120, render: (v: number) => v ? `¥${v.toFixed(2)}` : '-' },
+  { title: '备注', dataIndex: 'remark', key: 'remark', render: (v: string) => v || '-' },
 ]
 
 export function ConfirmStep({ state, onStateChange, onPrev }: StepProps) {
@@ -70,7 +77,7 @@ export function ConfirmStep({ state, onStateChange, onPrev }: StepProps) {
   }
 
   return (
-    <Card title="确认开单">
+    <>
       <Descriptions column={2} bordered size="small" style={{ marginBottom: 16 }}>
         <Descriptions.Item label="客户">{selectedCustomer?.name}</Descriptions.Item>
         <Descriptions.Item label="电话">{selectedCustomer?.phone}</Descriptions.Item>
@@ -100,59 +107,64 @@ export function ConfirmStep({ state, onStateChange, onPrev }: StepProps) {
         </>
       )}
 
-      <Row gutter={16} style={{ marginTop: 16 }}>
-        <Col span={6}>
-          <Statistic title="商品总额" value={totalAmount} prefix="¥" precision={2} />
+      <Row gutter={20} style={{ marginTop: 20 }} align="bottom">
+        <Col xs={24} md={12}>
+          <div style={{ marginBottom: 8, color: '#595959', fontWeight: 500 }}>备注</div>
+          <Input.TextArea autoComplete="off"
+            placeholder="备注（可选）"
+            value={state.orderRemark}
+            onChange={e => onStateChange({ orderRemark: e.target.value })}
+            rows={5}
+          />
         </Col>
-        <Col span={6}>
-          <div style={{ marginTop: 4 }}>
-            <label>优惠金额：</label>
-            <InputNumber
-              min={0}
-              max={totalAmount - state.subsidyAmount}
-              value={state.discountAmount}
-              onChange={v => onStateChange({ discountAmount: v || 0 })}
-              prefix="¥"
-              precision={2}
-              style={{ width: '100%' }}
-            />
+        <Col xs={24} md={12}>
+          {/* 账单式结算面板 */}
+          <div style={{ background: '#fafbfc', border: '1px solid #eef0f4', borderRadius: 12, padding: '18px 22px' }}>
+            <div style={settleRow}>
+              <span style={{ color: '#595959' }}>商品总额</span>
+              <span style={{ fontWeight: 600, color: '#1f2937' }}>¥{totalAmount.toFixed(2)}</span>
+            </div>
+            <div style={settleRow}>
+              <span style={{ color: '#595959' }}>优惠金额</span>
+              <InputNumber
+                min={0}
+                max={totalAmount - state.subsidyAmount}
+                value={state.discountAmount}
+                onChange={v => onStateChange({ discountAmount: v || 0 })}
+                prefix="¥"
+                precision={2}
+                style={{ width: 160 }}
+              />
+            </div>
+            <div style={settleRow}>
+              <span style={{ color: '#595959' }}>国补金额</span>
+              <InputNumber
+                min={0}
+                max={totalAmount - state.discountAmount}
+                value={state.subsidyAmount}
+                onChange={v => onStateChange({ subsidyAmount: v || 0 })}
+                prefix="¥"
+                precision={2}
+                style={{ width: 160 }}
+              />
+            </div>
+            <div style={{ borderTop: '1px dashed #e3e7ee', margin: '14px 0' }} />
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+              <span style={{ color: '#595959', fontWeight: 500 }}>客户实付</span>
+              <span style={{ fontSize: 28, fontWeight: 700, color: '#cf1322', lineHeight: 1 }}>
+                ¥{finalAmount.toFixed(2)}
+              </span>
+            </div>
           </div>
-        </Col>
-        <Col span={6}>
-          <div style={{ marginTop: 4 }}>
-            <label>国补金额：</label>
-            <InputNumber
-              min={0}
-              max={totalAmount - state.discountAmount}
-              value={state.subsidyAmount}
-              onChange={v => onStateChange({ subsidyAmount: v || 0 })}
-              prefix="¥"
-              precision={2}
-              style={{ width: '100%' }}
-            />
-          </div>
-        </Col>
-        <Col span={6}>
-          <Statistic title="客户实付" value={finalAmount} prefix="¥" precision={2} valueStyle={{ color: '#cf1322' }} />
         </Col>
       </Row>
 
-      <div style={{ marginTop: 16 }}>
-        <Input.TextArea autoComplete="off"
-          placeholder="备注（可选）"
-          value={state.orderRemark}
-          onChange={e => onStateChange({ orderRemark: e.target.value })}
-          rows={2}
-          style={{ marginBottom: 16 }}
-        />
-      </div>
-
-      <Space>
-        <Button onClick={onPrev}>上一步</Button>
-        <Button type="primary" icon={<CheckOutlined />} loading={submitting} onClick={handleSubmitOrder}>
+      <StepFooter>
+        <Button size="large" onClick={onPrev}>上一步</Button>
+        <Button type="primary" size="large" icon={<CheckOutlined />} loading={submitting} onClick={handleSubmitOrder}>
           确认开单
         </Button>
-      </Space>
-    </Card>
+      </StepFooter>
+    </>
   )
 }

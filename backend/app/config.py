@@ -27,7 +27,7 @@ class Settings(BaseSettings):
     DEFAULT_REGION_TOWN: str = "临湖镇"
 
     SHOP_NAME: str = "亚星电子经营部"
-    SHOP_ADDRESS: str = "江苏省苏州市吴中区临湖镇"
+    SHOP_ADDRESS: str = "苏州市吴中区临湖镇塘桥路18号"
     SHOP_PHONE: str = "138-0000-0000"
 
     def model_post_init(self, __context):

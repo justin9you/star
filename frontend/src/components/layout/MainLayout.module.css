@@ -2,17 +2,22 @@
   min-height: 100vh;
 }
 
-/* 右侧内容区底色，衬托白色卡片 */
+/* 右侧内容区底色，衬托白色卡片；留出固定侧栏的宽度 */
 .innerLayout {
   background: #f4f6fa;
+  margin-left: 220px;
 }
 
-/* ===================== 侧边栏 ===================== */
+/* ===================== 侧边栏（固定，不随页面滚动） ===================== */
 .sider {
   background: linear-gradient(180deg, #232d42 0%, #151c2c 100%) !important;
   box-shadow: 2px 0 12px rgba(0, 0, 0, 0.12);
-  position: relative;
-  z-index: 10;
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  overflow-y: auto;
+  z-index: 100;
 }
 
 .logo {

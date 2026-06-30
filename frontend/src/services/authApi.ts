@@ -14,6 +14,7 @@ export interface LoginResponse {
 export interface UserInfo {
   id: number
   username: string
+  name: string
   created_at: string
 }
 

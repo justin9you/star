@@ -56,6 +56,29 @@ body {
   min-width: 110px !important;
 }
 
+/* 客户下拉底部悬浮「新增客户」入口（在滚动区外，始终可见；用普通 div 避免与选项 hover/选中态混淆） */
+.customer-add-footer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 12px;
+  border-top: 1px solid #f0f0f0;
+  color: #1677ff;
+  font-weight: 500;
+  cursor: pointer;
+  background: #fff;
+  transition: background 0.15s ease;
+}
+
+.customer-add-footer:hover {
+  background: #f0f6ff;
+}
+
+.elder-mode .customer-add-footer {
+  font-size: 18px;
+  padding: 12px 14px;
+}
+
 /* 扫码搜索框下方提示语：标准版 12px，关爱版放大 */
 .scan-hint {
   color: #999;

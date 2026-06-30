@@ -62,11 +62,19 @@ def init_db():
         if not admin_user:
             admin_user = User(
                 username=settings.ADMIN_USERNAME,
+                name="管理员",
                 hashed_password=get_password_hash(settings.ADMIN_PASSWORD)
             )
             db.add(admin_user)
             db.commit()
             print(f"默认管理员用户已创建: {settings.ADMIN_USERNAME}")
+
+        # 回填显示名：admin 默认「管理员」，其他用户先用用户名占位
+        users_without_name = db.query(User).filter(User.name.is_(None)).all()
+        for u in users_without_name:
+            u.name = "管理员" if u.username == settings.ADMIN_USERNAME else u.username
+        if users_without_name:
+            db.commit()
     except Exception as e:
         print(f"创建默认管理员用户失败: {e}")
     finally:
@@ -92,6 +100,7 @@ def _migrate_add_columns(engine):
         ("sales_order_items", "product_unit", sqlalchemy.String(20)),
         ("sales_order_items", "cost_price", sqlalchemy.Numeric(10, 2)),
         ("inventory", "gift_quantity", sqlalchemy.Integer),
+        ("users", "name", sqlalchemy.String(50)),
     ]
     with engine.connect() as conn:
         for table, column, col_type in new_columns:

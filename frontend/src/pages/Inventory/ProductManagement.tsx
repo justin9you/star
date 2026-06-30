@@ -4,7 +4,7 @@ import { PlusOutlined, EditOutlined, DeleteOutlined, QrcodeOutlined, BarcodeOutl
 import { QRCodeSVG } from 'qrcode.react'
 import JsBarcode from 'jsbarcode'
 import { inventoryApi } from '../../services/inventoryApi'
-import { usePrivacyStore, formatAmount } from '../../stores/privacyStore'
+import { usePrivacyStore } from '../../stores/privacyStore'
 import type { Product, ProductCreate, Brand, Category } from '../../types/inventory'
 
 // 条形码显示组件
@@ -151,7 +151,7 @@ export default function ProductManagement() {
     { title: '品牌', dataIndex: 'brand_name', key: 'brand_name' },
     { title: '类型', dataIndex: 'category_name', key: 'category_name' },
     { title: '规格', dataIndex: 'spec', key: 'spec' },
-    { title: '进货价', dataIndex: 'purchase_price', key: 'purchase_price', render: (v: number) => formatAmount(v, isPrivacyMode) },
+    { title: '进货价', dataIndex: 'purchase_price', key: 'purchase_price', render: (v: number) => `¥${v}` },
     { title: '销售价', dataIndex: 'sale_price', key: 'sale_price', render: (v: number) => `¥${v}` },
     { title: '单位', dataIndex: 'unit', key: 'unit', width: 60 },
     {
@@ -183,7 +183,7 @@ export default function ProductManagement() {
         </Space>
       )
     },
-  ]
+  ].filter(col => !(isPrivacyMode && col.key === 'purchase_price'))  // 隐私模式下隐藏进货价列
 
   return (
     <Card
@@ -251,8 +251,8 @@ export default function ProductManagement() {
                 <Select options={[{ value: '台', label: '台' }, { value: '套', label: '套' }, { value: '件', label: '件' }]} />
               </Form.Item>
             </Col>
-            <Col span={12} style={isPrivacyMode ? { display: 'none' } : undefined}>
-              <Form.Item name="purchase_price" label="进货价" rules={[{ required: !isPrivacyMode }]}>
+            <Col span={12}>
+              <Form.Item name="purchase_price" label="进货价" rules={[{ required: true, message: '请输入进货价' }]}>
                 <InputNumber prefix="¥" min={0} precision={2} style={{ width: '100%' }} />
               </Form.Item>
             </Col>
