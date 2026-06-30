@@ -63,8 +63,8 @@ export default function InventoryList() {
 
   const columns = [
     { title: 'ID', dataIndex: 'id', key: 'id', width: 60 },
-    { title: '商品名称', dataIndex: 'product_name', key: 'product_name' },
-    { title: '仓库', dataIndex: 'warehouse_name', key: 'warehouse_name' },
+    { title: '商品名称', dataIndex: 'product_name', key: 'product_name', ellipsis: true },
+    { title: '仓库', dataIndex: 'warehouse_name', key: 'warehouse_name', width: 160, ellipsis: true },
     {
       title: '正常库存', dataIndex: 'quantity', key: 'quantity', width: 100,
       render: (qty: number, record: Inventory) => {

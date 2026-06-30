@@ -6,6 +6,7 @@ import { inventoryApi } from '../../services/inventoryApi'
 import { usePrivacyStore } from '../../stores/privacyStore'
 import type { Warehouse, Product } from '../../types/inventory'
 import type { PurchaseOrderItemCreate } from '../../types/purchase'
+import { MAX_LEN } from '../../constants/formLimits'
 
 interface OrderItem {
   key: string
@@ -237,8 +238,8 @@ export default function PurchaseOrder() {
   }))
 
   const columns = [
-    { title: '商品名称', dataIndex: 'product_name', key: 'product_name' },
-    { title: '规格', dataIndex: 'product_spec', key: 'product_spec', width: 100 },
+    { title: '商品名称', dataIndex: 'product_name', key: 'product_name', ellipsis: true },
+    { title: '规格', dataIndex: 'product_spec', key: 'product_spec', width: 100, ellipsis: true },
     { title: '单位', dataIndex: 'product_unit', key: 'product_unit', width: 60 },
     {
       title: '单价', dataIndex: 'unit_price', key: 'unit_price', width: 120,
@@ -299,8 +300,10 @@ export default function PurchaseOrder() {
           <Space>
             <span>供应商:</span>
             <Input placeholder="名称" style={{ width: 200 }} value={supplierName}
+              maxLength={MAX_LEN.NAME}
               onChange={e => setSupplierName(e.target.value)} />
             <Input placeholder="电话" style={{ width: 200 }} value={supplierPhone}
+              maxLength={MAX_LEN.PHONE}
               onChange={e => setSupplierPhone(e.target.value)} />
           </Space>
         </Col>
@@ -369,6 +372,7 @@ export default function PurchaseOrder() {
       <Row gutter={16} style={{ marginBottom: 16 }}>
         <Col span={12}>
           <Input placeholder="备注（可选）" value={remark}
+            maxLength={MAX_LEN.REMARK}
             onChange={e => setRemark(e.target.value)} />
         </Col>
         <Col span={12} style={{ textAlign: 'right' }}>

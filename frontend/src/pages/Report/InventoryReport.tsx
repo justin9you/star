@@ -67,10 +67,10 @@ export default function InventoryReport() {
 
   const columns = [
     { title: 'ID', dataIndex: 'product_id', key: 'product_id', width: 60 },
-    { title: '商品名称', dataIndex: 'product_name', key: 'product_name' },
-    { title: '品牌', dataIndex: 'brand_name', key: 'brand_name', width: 100 },
-    { title: '类型', dataIndex: 'category_name', key: 'category_name', width: 100 },
-    { title: '仓库', dataIndex: 'warehouse_name', key: 'warehouse_name', width: 120 },
+    { title: '商品名称', dataIndex: 'product_name', key: 'product_name', ellipsis: true },
+    { title: '品牌', dataIndex: 'brand_name', key: 'brand_name', width: 100, ellipsis: true },
+    { title: '类型', dataIndex: 'category_name', key: 'category_name', width: 100, ellipsis: true },
+    { title: '仓库', dataIndex: 'warehouse_name', key: 'warehouse_name', width: 120, ellipsis: true },
     {
       title: '当前库存', dataIndex: 'quantity', key: 'quantity', width: 100, sorter: (a: InventoryReportItem, b: InventoryReportItem) => a.quantity - b.quantity,
       render: (qty: number, record: InventoryReportItem) => {

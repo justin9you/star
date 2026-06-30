@@ -8,6 +8,7 @@ import { useElderModeStore } from '../../../stores/elderModeStore'
 import { DEFAULT_REGION } from '../../../data/regions'
 import type { StepProps, SalesOrderState } from '../types'
 import type { CustomerCreate } from '../../../types/sales'
+import { MAX_LEN } from '../../../constants/formLimits'
 
 interface CustomerStepProps extends StepProps {
   onCustomersUpdate: (customers: SalesOrderState['customers']) => void
@@ -189,13 +190,13 @@ export function CustomerStep({ state, onStateChange, onNext, onCustomersUpdate }
       >
         <Form form={customerForm} layout="vertical">
           <Form.Item name="name" label="客户姓名" rules={[{ required: true, message: '请输入客户姓名' }]}>
-            <Input placeholder="请输入客户姓名" autoComplete="off" />
+            <Input placeholder="请输入客户姓名" autoComplete="off" maxLength={MAX_LEN.NAME} />
           </Form.Item>
           <Form.Item name="phone" label="联系电话" rules={[{ required: true, message: '请输入联系电话' }]}>
-            <Input placeholder="请输入联系电话" autoComplete="off" />
+            <Input placeholder="请输入联系电话" autoComplete="off" maxLength={MAX_LEN.PHONE} />
           </Form.Item>
           <Form.Item name="contact" label="联系人">
-            <Input placeholder="请输入联系人" autoComplete="off" />
+            <Input placeholder="请输入联系人" autoComplete="off" maxLength={MAX_LEN.NAME} />
           </Form.Item>
           <Form.Item label="地址" required tooltip="省-市-区-镇四级联动选择">
             <Form.Item name="region" noStyle initialValue={DEFAULT_REGION} rules={[{ required: true, message: '请选择地址' }]}>
@@ -203,7 +204,7 @@ export function CustomerStep({ state, onStateChange, onNext, onCustomersUpdate }
             </Form.Item>
           </Form.Item>
           <Form.Item name="address" label="详细地址">
-            <Input placeholder="请输入详细地址" autoComplete="off" />
+            <Input placeholder="请输入详细地址" autoComplete="off" maxLength={MAX_LEN.ADDRESS} />
           </Form.Item>
         </Form>
       </Modal>

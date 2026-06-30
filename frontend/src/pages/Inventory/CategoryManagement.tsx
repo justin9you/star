@@ -3,6 +3,7 @@ import { Card, Table, Button, Modal, Form, Input, InputNumber, Switch, Space, me
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons'
 import { inventoryApi } from '../../services/inventoryApi'
 import type { Category, CategoryCreate } from '../../types/inventory'
+import { MAX_LEN } from '../../constants/formLimits'
 
 export default function CategoryManagement() {
   const [categories, setCategories] = useState<Category[]>([])
@@ -79,8 +80,8 @@ export default function CategoryManagement() {
 
   const columns = [
     { title: 'ID', dataIndex: 'id', key: 'id', width: 60 },
-    { title: '类型名称', dataIndex: 'name', key: 'name' },
-    { title: '类型编码', dataIndex: 'code', key: 'code' },
+    { title: '类型名称', dataIndex: 'name', key: 'name', ellipsis: true },
+    { title: '类型编码', dataIndex: 'code', key: 'code', ellipsis: true },
     {
       title: '父级类型', dataIndex: 'parent_id', key: 'parent_id', width: 120,
       render: (parentId: number | null) => {
@@ -138,10 +139,10 @@ export default function CategoryManagement() {
       >
         <Form form={form} layout="vertical">
           <Form.Item name="name" label="类型名称" rules={[{ required: true, message: '请输入类型名称' }]}>
-            <Input placeholder="如：冰箱、空调、洗衣机" autoComplete="off" />
+            <Input placeholder="如：冰箱、空调、洗衣机" autoComplete="off" maxLength={MAX_LEN.NAME} />
           </Form.Item>
           <Form.Item name="code" label="类型编码" rules={[{ required: true, message: '请输入类型编码' }]}>
-            <Input placeholder="请输入类型编码" autoComplete="off" />
+            <Input placeholder="请输入类型编码" autoComplete="off" maxLength={MAX_LEN.CODE} />
           </Form.Item>
           <Form.Item name="parent_id" label="父级类型">
             <TreeSelect

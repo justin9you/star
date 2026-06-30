@@ -6,6 +6,7 @@ import { salesApi } from '../../../services/salesApi'
 import { StepFooter } from './StepFooter'
 import type { StepProps } from '../types'
 import type { SalesOrderItemCreate } from '../../../types/sales'
+import { MAX_LEN } from '../../../constants/formLimits'
 
 const settleRow: CSSProperties = {
   display: 'flex',
@@ -15,7 +16,7 @@ const settleRow: CSSProperties = {
 }
 
 const ITEM_COLUMNS = [
-  { title: '商品名称', dataIndex: 'product_name', key: 'product_name' },
+  { title: '商品名称', dataIndex: 'product_name', key: 'product_name', ellipsis: true },
   { title: '数量', dataIndex: 'quantity', key: 'quantity' },
   { title: '单位', dataIndex: 'unit', key: 'unit', width: 60 },
   { title: '单价', dataIndex: 'unit_price', key: 'unit_price', render: (v: number) => `¥${v.toFixed(2)}` },
@@ -23,9 +24,9 @@ const ITEM_COLUMNS = [
 ]
 
 const OLD_COLUMNS = [
-  { title: '旧电器类型', dataIndex: 'category', key: 'category' },
+  { title: '旧电器类型', dataIndex: 'category', key: 'category', ellipsis: true },
   { title: '抵扣价', dataIndex: 'recycle_price', key: 'recycle_price', width: 120, render: (v: number) => v ? `¥${v.toFixed(2)}` : '-' },
-  { title: '备注', dataIndex: 'remark', key: 'remark', render: (v: string) => v || '-' },
+  { title: '备注', dataIndex: 'remark', key: 'remark', ellipsis: true, render: (v: string) => v || '-' },
 ]
 
 export function ConfirmStep({ state, onStateChange, onPrev }: StepProps) {
@@ -115,6 +116,8 @@ export function ConfirmStep({ state, onStateChange, onPrev }: StepProps) {
             value={state.orderRemark}
             onChange={e => onStateChange({ orderRemark: e.target.value })}
             rows={5}
+            maxLength={MAX_LEN.REMARK}
+            showCount
           />
         </Col>
         <Col xs={24} md={12}>

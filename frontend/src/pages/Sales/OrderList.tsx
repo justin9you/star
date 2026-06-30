@@ -6,6 +6,7 @@ import dayjs from 'dayjs'
 import { salesApi } from '../../services/salesApi'
 import type { SalesOrder, SalesOrderItem } from '../../types/sales'
 import PaymentModal from './components/PaymentModal'
+import { MAX_LEN } from '../../constants/formLimits'
 // 派工单暂时隐藏（仅需销售功能），代码保留
 // import DispatchPrintModal from './components/DispatchPrintModal'
 
@@ -148,6 +149,8 @@ export default function OrderList() {
           <Input.TextArea
             placeholder="请填写作废原因（如：客户退货、开错单等）"
             rows={2}
+            maxLength={MAX_LEN.REMARK}
+            showCount
             onChange={e => { reason = e.target.value }}
           />
         </div>
@@ -368,7 +371,7 @@ export default function OrderList() {
   const columns = [
     { title: 'ID', dataIndex: 'id', key: 'id', width: 60 },
     { title: '订单号', dataIndex: 'order_no', key: 'order_no', width: 160 },
-    { title: '客户', dataIndex: 'customer_name', key: 'customer_name', width: 90 },
+    { title: '客户', dataIndex: 'customer_name', key: 'customer_name', width: 90, ellipsis: true },
     {
       title: '总金额', dataIndex: 'total_amount', key: 'total_amount', width: 100,
       render: (v: number) => `¥${v.toFixed(2)}`
@@ -539,8 +542,8 @@ export default function OrderList() {
                 <h4 style={{ marginTop: 16 }}>商品明细</h4>
                 <Table
                   columns={[
-                    { title: '商品', dataIndex: 'product_name', key: 'product_name' },
-                    { title: '规格', dataIndex: 'product_spec', key: 'product_spec', render: (v: string) => v || '-' },
+                    { title: '商品', dataIndex: 'product_name', key: 'product_name', ellipsis: true },
+                    { title: '规格', dataIndex: 'product_spec', key: 'product_spec', ellipsis: true, render: (v: string) => v || '-' },
                     { title: '数量', dataIndex: 'quantity', key: 'quantity', render: (v: number, record: SalesOrderItem) => `${v}${record.product_unit || ''}` },
                     { title: '单价', dataIndex: 'unit_price', key: 'unit_price', render: (v: number) => `¥${v.toFixed(2)}` },
                     { title: '小计', dataIndex: 'subtotal', key: 'subtotal', render: (v: number) => `¥${v.toFixed(2)}` },
@@ -558,9 +561,9 @@ export default function OrderList() {
                 <h4 style={{ marginTop: 16 }}>以旧换新</h4>
                 <Table
                   columns={[
-                    { title: '类型', dataIndex: 'category', key: 'category' },
+                    { title: '类型', dataIndex: 'category', key: 'category', ellipsis: true },
                     { title: '抵扣价', dataIndex: 'recycle_price', key: 'recycle_price', width: 120, render: (v: number) => `¥${v.toFixed(2)}` },
-                    { title: '备注', dataIndex: 'remark', key: 'remark', render: (v: string) => v || '-' },
+                    { title: '备注', dataIndex: 'remark', key: 'remark', ellipsis: true, render: (v: string) => v || '-' },
                   ]}
                   dataSource={detailOrder.old_appliances}
                   rowKey="id"
@@ -575,9 +578,9 @@ export default function OrderList() {
                 <h4 style={{ marginTop: 16 }}>付款记录</h4>
                 <Table
                   columns={[
-                    { title: '支付方式', dataIndex: 'payment_method', key: 'payment_method', width: 130, render: (v: string) => <span style={{ whiteSpace: 'nowrap' }}>{v || '-'}</span> },
+                    { title: '支付方式', dataIndex: 'payment_method', key: 'payment_method', width: 130, ellipsis: true, render: (v: string) => <span style={{ whiteSpace: 'nowrap' }}>{v || '-'}</span> },
                     { title: '金额', dataIndex: 'amount', key: 'amount', width: 100, render: (v: number) => `¥${v.toFixed(2)}` },
-                    { title: '备注', dataIndex: 'remark', key: 'remark', render: (v: string) => v || '-' },
+                    { title: '备注', dataIndex: 'remark', key: 'remark', ellipsis: true, render: (v: string) => v || '-' },
                     { title: '时间', dataIndex: 'created_at', key: 'created_at', width: 170, render: (v: string) => <span style={{ whiteSpace: 'nowrap' }}>{v?.replace('T', ' ').slice(0, 16) || '-'}</span> },
                   ]}
                   dataSource={detailOrder.payments}

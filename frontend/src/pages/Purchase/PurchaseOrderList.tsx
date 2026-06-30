@@ -78,10 +78,10 @@ export default function PurchaseOrderList() {
 
   const columns = [
     { title: '单号', dataIndex: 'order_no', key: 'order_no', width: 180 },
-    { title: '供应商', dataIndex: 'supplier_name', key: 'supplier_name', width: 120,
+    { title: '供应商', dataIndex: 'supplier_name', key: 'supplier_name', width: 120, ellipsis: true,
       render: (v: string) => v || '-',
     },
-    { title: '仓库', dataIndex: 'warehouse_name', key: 'warehouse_name', width: 100 },
+    { title: '仓库', dataIndex: 'warehouse_name', key: 'warehouse_name', width: 100, ellipsis: true },
     { title: '总数量', dataIndex: 'total_quantity', key: 'total_quantity', width: 80 },
     { title: '搭送', dataIndex: 'gift_quantity', key: 'gift_quantity', width: 70,
       render: (v: number) => v > 0 ? <Tag color="orange">{v}</Tag> : '-',
@@ -109,8 +109,8 @@ export default function PurchaseOrderList() {
   ]
 
   const itemColumns = [
-    { title: '商品名称', dataIndex: 'product_name', key: 'product_name' },
-    { title: '规格', dataIndex: 'product_spec', key: 'product_spec', width: 100,
+    { title: '商品名称', dataIndex: 'product_name', key: 'product_name', ellipsis: true },
+    { title: '规格', dataIndex: 'product_spec', key: 'product_spec', width: 100, ellipsis: true,
       render: (v: string) => v || '-',
     },
     { title: '单位', dataIndex: 'product_unit', key: 'product_unit', width: 60 },

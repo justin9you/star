@@ -192,7 +192,7 @@ export default function DispatchList() {
     { title: 'ID', dataIndex: 'id', key: 'id', width: 60 },
     { title: '派工单号', dataIndex: 'dispatch_no', key: 'dispatch_no', width: 160 },
     { title: '订单号', dataIndex: 'sales_order_no', key: 'sales_order_no', width: 160 },
-    { title: '联系人', dataIndex: 'contact_name', key: 'contact_name', width: 90 },
+    { title: '联系人', dataIndex: 'contact_name', key: 'contact_name', width: 90, ellipsis: true },
     { title: '电话', dataIndex: 'contact_phone', key: 'contact_phone', width: 120 },
     { title: '师傅', dataIndex: 'assigned_to_name', key: 'assigned_to_name', width: 80, render: (v: string) => v || '-' },
     {
@@ -290,11 +290,11 @@ export default function DispatchList() {
                 <h4 style={{ marginTop: 16 }}>商品明细</h4>
                 <Table
                   columns={[
-                    { title: '商品', dataIndex: 'product_name', key: 'product_name' },
-                    { title: '规格', dataIndex: 'product_spec', key: 'product_spec', render: (v: string) => v || '-' },
+                    { title: '商品', dataIndex: 'product_name', key: 'product_name', ellipsis: true },
+                    { title: '规格', dataIndex: 'product_spec', key: 'product_spec', ellipsis: true, render: (v: string) => v || '-' },
                     { title: '数量', dataIndex: 'quantity', key: 'quantity' },
-                    { title: '出库仓库', dataIndex: 'warehouse_name', key: 'warehouse_name', render: (v: string) => v || '-' },
-                    { title: '安装备注', dataIndex: 'install_remark', key: 'install_remark', render: (v: string) => v || '-' },
+                    { title: '出库仓库', dataIndex: 'warehouse_name', key: 'warehouse_name', ellipsis: true, render: (v: string) => v || '-' },
+                    { title: '安装备注', dataIndex: 'install_remark', key: 'install_remark', ellipsis: true, render: (v: string) => v || '-' },
                   ]}
                   dataSource={detailDispatch.items}
                   rowKey="id"

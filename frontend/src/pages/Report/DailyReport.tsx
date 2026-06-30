@@ -253,7 +253,7 @@ export default function DailyReport() {
 
   const topColumns = [
     { title: '排名', key: 'rank', width: 60, render: (_: unknown, __: unknown, index: number) => index + 1 },
-    { title: '商品名称', dataIndex: 'product_name', key: 'product_name' },
+    { title: '商品名称', dataIndex: 'product_name', key: 'product_name', ellipsis: true },
     { title: '销售数量', dataIndex: 'total_quantity', key: 'total_quantity', width: 100 },
     {
       title: '销售金额', dataIndex: 'total_amount', key: 'total_amount', width: 120,

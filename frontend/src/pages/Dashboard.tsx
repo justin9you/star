@@ -25,8 +25,8 @@ export default function Dashboard() {
   }
 
   const lowStockColumns = [
-    { title: '商品名称', dataIndex: 'product_name', key: 'product_name' },
-    { title: '仓库', dataIndex: 'warehouse_name', key: 'warehouse_name' },
+    { title: '商品名称', dataIndex: 'product_name', key: 'product_name', ellipsis: true },
+    { title: '仓库', dataIndex: 'warehouse_name', key: 'warehouse_name', width: 160, ellipsis: true },
     { title: '当前库存', dataIndex: 'quantity', key: 'quantity', width: 100 },
     { title: '最低库存', dataIndex: 'min_quantity', key: 'min_quantity', width: 100 },
   ]

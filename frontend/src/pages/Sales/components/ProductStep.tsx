@@ -6,9 +6,10 @@ import { usePrivacyStore } from '../../../stores/privacyStore'
 import type { StepProps, OrderItem, SalesOrderState } from '../types'
 import type { ProductCreate } from '../../../types/inventory'
 import { StepFooter } from './StepFooter'
+import { MAX_LEN } from '../../../constants/formLimits'
 
 const ITEM_COLUMNS = [
-  { title: '商品名称', dataIndex: 'product_name', key: 'product_name' },
+  { title: '商品名称', dataIndex: 'product_name', key: 'product_name', ellipsis: true },
   { title: '单位', dataIndex: 'unit', key: 'unit', width: 70, align: 'center' as const },
   { title: '单价', dataIndex: 'unit_price', key: 'unit_price', width: 110, align: 'right' as const, render: (v: number) => `¥${v.toFixed(2)}` },
   { title: '小计', dataIndex: 'subtotal', key: 'subtotal', width: 120, align: 'right' as const, render: (v: number) => `¥${v.toFixed(2)}` },
@@ -221,7 +222,7 @@ export function ProductStep({ state, onStateChange, onNext, onPrev, onProductsUp
   ]
 
   const oldColumnsWithActions = [
-    { title: '旧电器类型', dataIndex: 'category', key: 'category' },
+    { title: '旧电器类型', dataIndex: 'category', key: 'category', ellipsis: true },
     {
       title: '抵扣价', dataIndex: 'recycle_price', key: 'recycle_price', width: 160,
       render: (v: number, _record: unknown, index: number) => (
@@ -236,7 +237,7 @@ export function ProductStep({ state, onStateChange, onNext, onPrev, onProductsUp
         />
       ),
     },
-    { title: '备注', dataIndex: 'remark', key: 'remark', render: (v: string) => v || '-' },
+    { title: '备注', dataIndex: 'remark', key: 'remark', ellipsis: true, render: (v: string) => v || '-' },
     {
       title: '', key: 'action', width: 60,
       render: (_: unknown, __: unknown, index: number) => (
@@ -371,13 +372,13 @@ export function ProductStep({ state, onStateChange, onNext, onPrev, onProductsUp
       >
         <Form form={oldForm} layout="vertical">
           <Form.Item name="category" label="旧电器类型" rules={[{ required: true, message: '请输入类型' }]}>
-            <Input placeholder="如：旧冰箱、旧空调" autoComplete="off" />
+            <Input placeholder="如：旧冰箱、旧空调" autoComplete="off" maxLength={MAX_LEN.NAME} />
           </Form.Item>
           <Form.Item name="recycle_price" label="抵扣价">
             <InputNumber prefix="¥" min={0} precision={2} style={{ width: '100%' }} />
           </Form.Item>
           <Form.Item name="remark" label="备注">
-            <Input placeholder="如：型号、新旧程度、外观等" autoComplete="off" />
+            <Input placeholder="如：型号、新旧程度、外观等" autoComplete="off" maxLength={MAX_LEN.REMARK} />
           </Form.Item>
         </Form>
       </Modal>
@@ -394,7 +395,7 @@ export function ProductStep({ state, onStateChange, onNext, onPrev, onProductsUp
       >
         <Form form={productForm} layout="vertical">
           <Form.Item name="name" label="商品名称" rules={[{ required: true }]}>
-            <Input placeholder="请输入商品名称" autoComplete="off" />
+            <Input placeholder="请输入商品名称" autoComplete="off" maxLength={MAX_LEN.NAME} />
           </Form.Item>
           <Form.Item name="brand_id" label="品牌" rules={[{ required: true }]}>
             <Select placeholder="请选择品牌" options={state.brands.map(b => ({ value: b.id, label: b.name }))} />
@@ -403,7 +404,7 @@ export function ProductStep({ state, onStateChange, onNext, onPrev, onProductsUp
             <Select placeholder="请选择类型" options={state.categories.map(c => ({ value: c.id, label: c.name }))} />
           </Form.Item>
           <Form.Item name="spec" label="规格">
-            <Input placeholder="如：200L/1.5匹/8kg" autoComplete="off" />
+            <Input placeholder="如：200L/1.5匹/8kg" autoComplete="off" maxLength={MAX_LEN.SPEC} />
           </Form.Item>
           <Row gutter={16}>
             {!isPrivacyMode && (

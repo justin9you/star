@@ -55,6 +55,9 @@ def list_backups() -> list[dict]:
 
 def restore_backup(filename: str) -> dict:
     """恢复备份"""
+    # 延迟导入避免循环依赖
+    from app.database import engine
+
     backup_dir = get_backup_dir()
     backup_path = backup_dir / filename
 
@@ -69,7 +72,20 @@ def restore_backup(filename: str) -> dict:
         pre_restore_backup = backup_dir / f"pre_restore_{timestamp}.db"
         shutil.copy2(db_path, pre_restore_backup)
 
-    # 恢复备份
+    # 关键：释放所有数据库连接。否则正在运行的引擎连接池仍指向旧库（读到旧数据），
+    # Windows 下文件还会被占用导致覆盖失败 —— 这正是“恢复没用”的根因。
+    engine.dispose()
+
+    # 清理可能存在的 WAL/SHM，避免旧数据回放覆盖恢复结果
+    for suffix in ("-wal", "-shm"):
+        side = Path(str(db_path) + suffix)
+        if side.exists():
+            try:
+                side.unlink()
+            except Exception:
+                pass
+
+    # 恢复备份（此时无打开的连接，覆盖生效）
     shutil.copy2(backup_path, db_path)
 
     return {

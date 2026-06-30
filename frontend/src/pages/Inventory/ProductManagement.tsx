@@ -6,6 +6,7 @@ import JsBarcode from 'jsbarcode'
 import { inventoryApi } from '../../services/inventoryApi'
 import { usePrivacyStore } from '../../stores/privacyStore'
 import type { Product, ProductCreate, Brand, Category } from '../../types/inventory'
+import { MAX_LEN } from '../../constants/formLimits'
 
 // 条形码显示组件
 function BarcodeDisplay({ value }: { value: string }) {
@@ -147,10 +148,10 @@ export default function ProductManagement() {
 
   const columns = [
     { title: 'ID', dataIndex: 'id', key: 'id', width: 60 },
-    { title: '商品名称', dataIndex: 'name', key: 'name' },
-    { title: '品牌', dataIndex: 'brand_name', key: 'brand_name' },
-    { title: '类型', dataIndex: 'category_name', key: 'category_name' },
-    { title: '规格', dataIndex: 'spec', key: 'spec' },
+    { title: '商品名称', dataIndex: 'name', key: 'name', ellipsis: true },
+    { title: '品牌', dataIndex: 'brand_name', key: 'brand_name', width: 120, ellipsis: true },
+    { title: '类型', dataIndex: 'category_name', key: 'category_name', width: 120, ellipsis: true },
+    { title: '规格', dataIndex: 'spec', key: 'spec', ellipsis: true },
     { title: '进货价', dataIndex: 'purchase_price', key: 'purchase_price', render: (v: number) => `¥${v}` },
     { title: '销售价', dataIndex: 'sale_price', key: 'sale_price', render: (v: number) => `¥${v}` },
     { title: '单位', dataIndex: 'unit', key: 'unit', width: 60 },
@@ -228,7 +229,7 @@ export default function ProductManagement() {
           <Row gutter={16}>
             <Col span={24}>
               <Form.Item name="name" label="商品名称" rules={[{ required: true }]}>
-                <Input placeholder="请输入商品名称" autoComplete="off" />
+                <Input placeholder="请输入商品名称" autoComplete="off" maxLength={MAX_LEN.NAME} />
               </Form.Item>
             </Col>
             <Col span={12}>
@@ -243,7 +244,7 @@ export default function ProductManagement() {
             </Col>
             <Col span={12}>
               <Form.Item name="spec" label="规格">
-                <Input placeholder="如：200L/1.5匹/8kg" autoComplete="off" />
+                <Input placeholder="如：200L/1.5匹/8kg" autoComplete="off" maxLength={MAX_LEN.SPEC} />
               </Form.Item>
             </Col>
             <Col span={12}>
@@ -263,17 +264,17 @@ export default function ProductManagement() {
             </Col>
             <Col span={12}>
               <Form.Item name="qr_code" label="二维码">
-                <Input placeholder="扫码枪扫描录入" autoComplete="off" />
+                <Input placeholder="扫码枪扫描录入" autoComplete="off" maxLength={MAX_LEN.BARCODE} />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item name="barcode" label="条形码">
-                <Input placeholder="扫码枪扫描录入" autoComplete="off" />
+                <Input placeholder="扫码枪扫描录入" autoComplete="off" maxLength={MAX_LEN.BARCODE} />
               </Form.Item>
             </Col>
             <Col span={24}>
               <Form.Item name="remark" label="备注">
-                <Input.TextArea rows={2} autoComplete="off" />
+                <Input.TextArea rows={2} autoComplete="off" maxLength={MAX_LEN.REMARK} showCount />
               </Form.Item>
             </Col>
           </Row>

@@ -3,6 +3,7 @@ import { Card, Table, Button, Modal, Form, Input, Select, Switch, Space, message
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons'
 import { inventoryApi } from '../../services/inventoryApi'
 import type { Warehouse, WarehouseCreate } from '../../types/inventory'
+import { MAX_LEN } from '../../constants/formLimits'
 
 const WAREHOUSE_TYPES = [
   { value: '主仓', label: '主仓' },
@@ -138,19 +139,19 @@ export default function WarehouseManagement() {
       >
         <Form form={form} layout="vertical">
           <Form.Item name="name" label="仓库名称" rules={[{ required: true, message: '请输入仓库名称' }]}>
-            <Input placeholder="请输入仓库名称" autoComplete="off" />
+            <Input placeholder="请输入仓库名称" autoComplete="off" maxLength={MAX_LEN.NAME} />
           </Form.Item>
           <Form.Item name="type" label="仓库类型">
             <Select options={WAREHOUSE_TYPES} placeholder="请选择仓库类型" />
           </Form.Item>
           <Form.Item name="address" label="地址">
-            <Input placeholder="请输入仓库地址" autoComplete="off" />
+            <Input placeholder="请输入仓库地址" autoComplete="off" maxLength={MAX_LEN.ADDRESS} />
           </Form.Item>
           <Form.Item name="manager" label="负责人">
-            <Input placeholder="请输入负责人" autoComplete="off" />
+            <Input placeholder="请输入负责人" autoComplete="off" maxLength={MAX_LEN.NAME} />
           </Form.Item>
           <Form.Item name="phone" label="联系电话">
-            <Input placeholder="请输入联系电话" autoComplete="off" />
+            <Input placeholder="请输入联系电话" autoComplete="off" maxLength={MAX_LEN.PHONE} />
           </Form.Item>
           {editingWarehouse && (
             <Form.Item name="status" label="状态" valuePropName="checked">

@@ -3,6 +3,7 @@ import { Card, Table, Button, Modal, Form, Input, Switch, Space, message, Popcon
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons'
 import { inventoryApi } from '../../services/inventoryApi'
 import type { Brand, BrandCreate } from '../../types/inventory'
+import { MAX_LEN } from '../../constants/formLimits'
 
 export default function BrandManagement() {
   const [brands, setBrands] = useState<Brand[]>([])
@@ -129,13 +130,13 @@ export default function BrandManagement() {
       >
         <Form form={form} layout="vertical">
           <Form.Item name="name" label="品牌名称" rules={[{ required: true, message: '请输入品牌名称' }]}>
-            <Input placeholder="请输入品牌名称" autoComplete="off" />
+            <Input placeholder="请输入品牌名称" autoComplete="off" maxLength={MAX_LEN.NAME} />
           </Form.Item>
           <Form.Item name="code" label="品牌编码" rules={[{ required: true, message: '请输入品牌编码' }]}>
-            <Input placeholder="请输入品牌编码" autoComplete="off" />
+            <Input placeholder="请输入品牌编码" autoComplete="off" maxLength={MAX_LEN.CODE} />
           </Form.Item>
           <Form.Item name="remark" label="备注">
-            <Input.TextArea placeholder="请输入备注" rows={3} autoComplete="off" />
+            <Input.TextArea placeholder="请输入备注" rows={3} autoComplete="off" maxLength={MAX_LEN.REMARK} showCount />
           </Form.Item>
           {editingBrand && (
             <Form.Item name="status" label="状态" valuePropName="checked">

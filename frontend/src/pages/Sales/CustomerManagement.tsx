@@ -4,6 +4,7 @@ import { PlusOutlined, EditOutlined, DeleteOutlined, PhoneOutlined } from '@ant-
 import { salesApi } from '../../services/salesApi'
 import type { Customer, CustomerCreate } from '../../types/sales'
 import RegionSelect from '../../components/RegionSelect'
+import { MAX_LEN } from '../../constants/formLimits'
 
 const DEFAULT_REGION: [string, string, string, string] = ['江苏省', '苏州市', '吴中区', '临湖镇']
 
@@ -104,19 +105,19 @@ export default function CustomerManagement() {
 
   const columns = [
     { title: 'ID', dataIndex: 'id', key: 'id', width: 60 },
-    { title: '客户姓名', dataIndex: 'name', key: 'name', width: 90 },
+    { title: '客户姓名', dataIndex: 'name', key: 'name', width: 90, ellipsis: true },
     {
-      title: '联系电话', dataIndex: 'phone', key: 'phone', width: 150,
+      title: '联系电话', dataIndex: 'phone', key: 'phone', width: 150, ellipsis: true,
       render: (phone: string) => <span style={{ whiteSpace: 'nowrap' }}><PhoneOutlined /> {phone}</span>
     },
     {
-      title: '地址', key: 'address', width: 280,
+      title: '地址', key: 'address', width: 280, ellipsis: true,
       render: (_: unknown, record: Customer) => {
         const parts = [record.province, record.city, record.district, record.town, record.address].filter(Boolean)
-        return <div style={{ whiteSpace: 'nowrap' }}>{parts.join('') || '-'}</div>
+        return parts.join('') || '-'
       }
     },
-    { title: '联系人', dataIndex: 'contact', key: 'contact', width: 100 },
+    { title: '联系人', dataIndex: 'contact', key: 'contact', width: 100, ellipsis: true },
     { title: '备注', dataIndex: 'remark', key: 'remark', width: 120, ellipsis: true },
     {
       title: '创建时间', dataIndex: 'created_at', key: 'created_at', width: 170,
@@ -175,10 +176,10 @@ export default function CustomerManagement() {
       >
         <Form form={form} layout="vertical" onValuesChange={handleValuesChange}>
           <Form.Item name="name" label="客户姓名" rules={[{ required: true, message: '请输入客户姓名' }]}>
-            <Input placeholder="请输入客户姓名" autoComplete="off" />
+            <Input placeholder="请输入客户姓名" autoComplete="off" maxLength={MAX_LEN.NAME} />
           </Form.Item>
           <Form.Item name="phone" label="联系电话" rules={[{ required: true, message: '请输入联系电话' }]}>
-            <Input placeholder="请输入联系电话" autoComplete="off" />
+            <Input placeholder="请输入联系电话" autoComplete="off" maxLength={MAX_LEN.PHONE} />
           </Form.Item>
           <Form.Item label="地址" required tooltip="省-市-区-镇四级联动选择">
             <Form.Item name="region" noStyle rules={[{ required: true, message: '请选择地址' }]}>
@@ -186,13 +187,13 @@ export default function CustomerManagement() {
             </Form.Item>
           </Form.Item>
           <Form.Item name="address" label="详细地址">
-            <Input placeholder="请输入详细地址" autoComplete="off" />
+            <Input placeholder="请输入详细地址" autoComplete="off" maxLength={MAX_LEN.ADDRESS} />
           </Form.Item>
           <Form.Item name="contact" label="联系人">
-            <Input placeholder="请输入联系人" autoComplete="off" />
+            <Input placeholder="请输入联系人" autoComplete="off" maxLength={MAX_LEN.NAME} />
           </Form.Item>
           <Form.Item name="remark" label="备注">
-            <Input.TextArea rows={2} placeholder="请输入备注" autoComplete="off" />
+            <Input.TextArea rows={2} placeholder="请输入备注" autoComplete="off" maxLength={MAX_LEN.REMARK} showCount />
           </Form.Item>
         </Form>
       </Modal>

@@ -1,5 +1,7 @@
 from fastapi import APIRouter, Depends, UploadFile, File, HTTPException
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
+from pathlib import Path
 from typing import List
 
 from app.database import get_db
@@ -9,6 +11,16 @@ from app.services.auth import get_current_user
 from app.models.user import User
 
 router = APIRouter()
+
+
+@router.get("/download")
+async def download_backup(filename: str, current_user: User = Depends(get_current_user)):
+    """下载备份文件"""
+    safe_name = Path(filename).name  # 防止路径穿越
+    backup_path = Path(backup_service.get_backup_dir()) / safe_name
+    if not backup_path.exists() or backup_path.suffix != ".db":
+        raise HTTPException(status_code=404, detail="备份文件不存在")
+    return FileResponse(path=str(backup_path), filename=safe_name, media_type="application/octet-stream")
 
 
 @router.get("/list", response_model=ResponseModel)
