@@ -82,6 +82,11 @@ def _migrate_add_columns(engine):
         ("sales_orders", "customer_phone", sqlalchemy.String(20)),
         ("sales_orders", "customer_address", sqlalchemy.String(500)),
         ("sales_orders", "subsidy_amount", sqlalchemy.Numeric(10, 2)),
+        ("sales_orders", "created_by", sqlalchemy.Integer),
+        ("sales_orders", "cancel_reason", sqlalchemy.String(255)),
+        ("sales_orders", "cancelled_at", sqlalchemy.DateTime),
+        ("sales_orders", "cancelled_by", sqlalchemy.Integer),
+        ("products", "status", sqlalchemy.Boolean),
         ("sales_order_items", "product_name", sqlalchemy.String(200)),
         ("sales_order_items", "product_spec", sqlalchemy.String(100)),
         ("sales_order_items", "product_unit", sqlalchemy.String(20)),
@@ -98,4 +103,16 @@ def _migrate_add_columns(engine):
                 conn.commit()
             except Exception:
                 # 列已存在等情况跳过；ALTER 失败不影响启动
+                pass
+
+        # 回填：新增列对已有行为 NULL，需补默认值，避免被当成停用/异常
+        backfills = [
+            "UPDATE products SET status = 1 WHERE status IS NULL",
+            "UPDATE sales_orders SET subsidy_amount = 0 WHERE subsidy_amount IS NULL",
+        ]
+        for sql in backfills:
+            try:
+                conn.execute(sqlalchemy.text(sql))
+                conn.commit()
+            except Exception:
                 pass

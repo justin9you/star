@@ -156,7 +156,8 @@ def create_order(db: Session, customer_id: int, items: list[dict],
         final_amount=final_amount,
         payment_status=PaymentStatus.UNPAID.value,
         status=OrderStatus.ACTIVE.value,
-        remark=remark
+        remark=remark,
+        created_by=user_id
     )
     db.add(db_order)
     db.flush()  # 获取 order.id
@@ -281,7 +282,8 @@ def get_order(db: Session, order_id: int) -> Optional[SalesOrder]:
     return db.query(SalesOrder).filter(SalesOrder.id == order_id).first()
 
 
-def cancel_order(db: Session, order_id: int, user_id: int = 1, default_warehouse_id: int = 1) -> SalesOrder:
+def cancel_order(db: Session, order_id: int, user_id: int = 1, default_warehouse_id: int = 1,
+                 cancel_reason: Optional[str] = None) -> SalesOrder:
     """作废订单，根据流水记录精确回滚库存到原仓库"""
     order = get_order(db, order_id)
     if not order:
@@ -319,11 +321,14 @@ def cancel_order(db: Session, order_id: int, user_id: int = 1, default_warehouse
             inventory_service.stock_in(db, item.product_id, default_warehouse_id, item.quantity, user_id=user_id, commit=False)
 
     order.status = OrderStatus.CANCELLED.value
+    order.cancel_reason = cancel_reason
+    order.cancelled_at = datetime.utcnow()
+    order.cancelled_by = user_id
     order.updated_at = datetime.utcnow()
     db.commit()
     db.refresh(order)
 
-    log_operation(db, user_id, "作废订单", f"作废订单: {order.order_no}", before_data={"status": OrderStatus.ACTIVE.value}, after_data={"status": OrderStatus.CANCELLED.value})
+    log_operation(db, user_id, "作废订单", f"作废订单: {order.order_no}，原因: {cancel_reason or '未填写'}", before_data={"status": OrderStatus.ACTIVE.value}, after_data={"status": OrderStatus.CANCELLED.value, "cancel_reason": cancel_reason})
     return order
 
 

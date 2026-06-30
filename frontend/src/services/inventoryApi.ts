@@ -77,11 +77,12 @@ export const inventoryApi = {
   },
 
   // 商品管理
-  getProducts: async (page = 1, pageSize = 20, filters?: { brandId?: number; categoryId?: number; keyword?: string }): Promise<PaginatedResponse<Product>> => {
+  getProducts: async (page = 1, pageSize = 20, filters?: { brandId?: number; categoryId?: number; keyword?: string; onlyActive?: boolean }): Promise<PaginatedResponse<Product>> => {
     const params = new URLSearchParams({ page: String(page), page_size: String(pageSize) })
     if (filters?.brandId) params.append('brand_id', String(filters.brandId))
     if (filters?.categoryId) params.append('category_id', String(filters.categoryId))
     if (filters?.keyword) params.append('keyword', filters.keyword)
+    if (filters?.onlyActive) params.append('only_active', 'true')
     return request.get(`/inventory/products?${params}`)
   },
 

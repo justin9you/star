@@ -1,5 +1,5 @@
 from datetime import datetime
-from sqlalchemy import Column, Integer, String, DateTime, Text, Numeric, ForeignKey
+from sqlalchemy import Column, Integer, String, DateTime, Text, Numeric, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
 from app.database import Base
 
@@ -17,6 +17,7 @@ class Product(Base):
     unit = Column(String(20), default="台", comment="单位（台/套/件）")
     qr_code = Column(String(100), unique=True, index=True, comment="唯一二维码")
     barcode = Column(String(50), index=True, comment="条形码")
+    status = Column(Boolean, default=True, comment="状态：True上架，False停用")
     remark = Column(Text, comment="备注")
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

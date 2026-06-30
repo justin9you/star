@@ -227,6 +227,17 @@ class TestSalesOrder:
         assert data["data"]["id"] == order_id
         assert len(data["data"]["items"]) == 1
 
+    def test_create_order_records_creator(self, client, auth_headers):
+        """订单记录开单人"""
+        create_resp = client.post("/api/v1/sales/orders", json={
+            "customer_id": self.customer_id,
+            "items": [{"product_id": self.product_id, "quantity": 1, "unit_price": 150.00}]
+        }, headers=auth_headers)
+        order_id = create_resp.json()["data"]["id"]
+
+        detail = client.get(f"/api/v1/sales/orders/{order_id}").json()["data"]
+        assert detail["created_by_name"] == "testuser"
+
     def test_cancel_order(self, client, auth_headers):
         """作废订单"""
         # 创建订单
@@ -243,6 +254,24 @@ class TestSalesOrder:
         # 验证状态 - 中文值
         detail_resp = client.get(f"/api/v1/sales/orders/{order_id}")
         assert detail_resp.json()["data"]["status"] == "已作废"
+
+    def test_cancel_order_with_reason(self, client, auth_headers):
+        """作废订单记录原因/时间/操作人"""
+        create_resp = client.post("/api/v1/sales/orders", json={
+            "customer_id": self.customer_id,
+            "items": [{"product_id": self.product_id, "quantity": 1, "unit_price": 150.00}]
+        }, headers=auth_headers)
+        order_id = create_resp.json()["data"]["id"]
+
+        response = client.post(f"/api/v1/sales/orders/{order_id}/cancel",
+                               json={"cancel_reason": "客户退货"}, headers=auth_headers)
+        assert response.status_code == 200
+
+        detail = client.get(f"/api/v1/sales/orders/{order_id}").json()["data"]
+        assert detail["status"] == "已作废"
+        assert detail["cancel_reason"] == "客户退货"
+        assert detail["cancelled_at"] is not None
+        assert detail["cancelled_by_name"] == "testuser"
 
     def test_mark_paid(self, client, auth_headers):
         """标记已付款"""

@@ -81,6 +81,7 @@ class ProductUpdate(BaseModel):
     unit: Optional[str] = None
     qr_code: Optional[str] = None
     barcode: Optional[str] = None
+    status: Optional[bool] = None
     remark: Optional[str] = None
 
 
@@ -95,6 +96,7 @@ class ProductResponse(BaseModel):
     unit: str
     qr_code: Optional[str] = None
     barcode: Optional[str] = None
+    status: bool = True
     remark: Optional[str] = None
     created_at: datetime
 

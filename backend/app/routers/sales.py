@@ -130,7 +130,10 @@ async def list_orders(
             "subsidy_amount": float(o.subsidy_amount or 0),
             "final_amount": float(o.final_amount), "payment_status": o.payment_status,
             "paid_amount": float(sales_service.get_payment_total(db, o.id)),
-            "status": o.status, "remark": o.remark, "created_at": o.created_at.isoformat()
+            "status": o.status, "remark": o.remark, "created_at": o.created_at.isoformat(),
+            "created_by": o.created_by, "created_by_name": o.creator.username if o.creator else None,
+            "cancel_reason": o.cancel_reason,
+            "cancelled_at": o.cancelled_at.isoformat() if o.cancelled_at else None
         })
     return {"items": result_items, "total": total, "page": page, "page_size": page_size, "total_pages": (total + page_size - 1) // page_size}
 
@@ -205,14 +208,19 @@ async def get_order(order_id: int, db: Session = Depends(get_db)):
         "final_amount": float(o.final_amount), "payment_status": o.payment_status,
         "paid_amount": paid_amount,
         "status": o.status, "remark": o.remark, "created_at": o.created_at.isoformat(),
+        "created_by": o.created_by, "created_by_name": o.creator.username if o.creator else None,
+        "cancel_reason": o.cancel_reason,
+        "cancelled_at": o.cancelled_at.isoformat() if o.cancelled_at else None,
+        "cancelled_by_name": o.canceller.username if o.canceller else None,
         "items": items, "old_appliances": old_appliances, "payments": payments
     })
 
 
 @router.post("/orders/{order_id}/cancel", response_model=ResponseModel)
-async def cancel_order(order_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+async def cancel_order(order_id: int, body: Optional[dict] = Body(default=None), db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     try:
-        sales_service.cancel_order(db, order_id, current_user.id)
+        cancel_reason = (body or {}).get("cancel_reason")
+        sales_service.cancel_order(db, order_id, current_user.id, cancel_reason=cancel_reason)
         return ResponseModel(message="销售单已作废")
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))

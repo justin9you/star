@@ -45,8 +45,8 @@ export const salesApi = {
     return request.post('/sales/orders', data)
   },
 
-  cancelOrder: async (id: number): Promise<ApiResponse> => {
-    return request.post(`/sales/orders/${id}/cancel`)
+  cancelOrder: async (id: number, cancelReason?: string): Promise<ApiResponse> => {
+    return request.post(`/sales/orders/${id}/cancel`, { cancel_reason: cancelReason })
   },
 
   markPaid: async (id: number): Promise<ApiResponse> => {

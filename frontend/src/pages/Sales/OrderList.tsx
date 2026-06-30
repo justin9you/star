@@ -137,19 +137,29 @@ export default function OrderList() {
   }
 
   const confirmCancel = (orderId: number) => {
+    let reason = ''
     modal.confirm({
       title: '确认作废',
-      content: '确定要作废该订单吗？作废后不可恢复。',
+      content: (
+        <div>
+          <p>确定要作废该订单吗？作废后不可恢复，库存将自动回滚。</p>
+          <Input.TextArea
+            placeholder="请填写作废原因（如：客户退货、开错单等）"
+            rows={2}
+            onChange={e => { reason = e.target.value }}
+          />
+        </div>
+      ),
       okText: '作废',
       okButtonProps: { danger: true },
       cancelText: '取消',
-      onOk: () => handleCancel(orderId),
+      onOk: () => handleCancel(orderId, reason.trim()),
     })
   }
 
-  const handleCancel = async (orderId: number) => {
+  const handleCancel = async (orderId: number, cancelReason?: string) => {
     try {
-      await salesApi.cancelOrder(orderId)
+      await salesApi.cancelOrder(orderId, cancelReason || undefined)
       message.success('已作废')
       loadOrders()
     } catch {
@@ -516,7 +526,18 @@ export default function OrderList() {
                   {ORDER_STATUS_MAP[detailOrder.status]?.text || detailOrder.status}
                 </Tag>
               </Descriptions.Item>
+              <Descriptions.Item label="开单人">{detailOrder.created_by_name || '-'}</Descriptions.Item>
               <Descriptions.Item label="创建时间">{detailOrder.created_at?.replace('T', ' ').slice(0, 19)}</Descriptions.Item>
+              {detailOrder.status === '已作废' && (
+                <Descriptions.Item label="作废原因" span={2}>
+                  {detailOrder.cancel_reason || '未填写'}
+                  {detailOrder.cancelled_at && (
+                    <span style={{ marginLeft: 8, fontSize: 12, color: '#999' }}>
+                      （{detailOrder.cancelled_by_name || ''} {detailOrder.cancelled_at.replace('T', ' ').slice(0, 19)}）
+                    </span>
+                  )}
+                </Descriptions.Item>
+              )}
             </Descriptions>
 
             {detailOrder.items && detailOrder.items.length > 0 && (

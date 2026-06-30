@@ -59,6 +59,7 @@ export interface Product {
   unit: string;
   qr_code?: string;
   barcode?: string;
+  status?: boolean;
   remark?: string;
   created_at: string;
   brand_name?: string;
@@ -88,6 +89,7 @@ export interface ProductUpdate {
   unit?: string;
   qr_code?: string;
   barcode?: string;
+  status?: boolean;
   remark?: string;
 }
 

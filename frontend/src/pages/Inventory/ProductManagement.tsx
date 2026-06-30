@@ -118,6 +118,17 @@ export default function ProductManagement() {
     setCodeModalOpen(true)
   }
 
+  const handleToggleStatus = async (product: Product) => {
+    const nextStatus = !(product.status ?? true)
+    try {
+      await inventoryApi.updateProduct(product.id, { status: nextStatus })
+      message.success(nextStatus ? '已上架' : '已停用')
+      loadProducts()
+    } catch {
+      message.error('操作失败')
+    }
+  }
+
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields()
@@ -153,11 +164,20 @@ export default function ProductManagement() {
       render: (barcode: string) => barcode ? <Tag color="green">{barcode}</Tag> : '-'
     },
     {
-      title: '操作', key: 'action', width: 200,
+      title: '状态', dataIndex: 'status', key: 'status', width: 80,
+      render: (status: boolean) => (status ?? true)
+        ? <Tag color="success">上架</Tag>
+        : <Tag color="default">停用</Tag>
+    },
+    {
+      title: '操作', key: 'action', width: 260,
       render: (_: unknown, record: Product) => (
         <Space>
           <Button type="link" size="small" icon={<QrcodeOutlined />} onClick={() => handleShowCode(record)}>码</Button>
           <Button type="link" size="small" icon={<EditOutlined />} onClick={() => handleEdit(record)}>编辑</Button>
+          <Button type="link" size="small" onClick={() => handleToggleStatus(record)}>
+            {(record.status ?? true) ? '停用' : '上架'}
+          </Button>
           <Popconfirm title="确定删除？" onConfirm={() => handleDelete(record.id)}>
             <Button type="link" size="small" danger icon={<DeleteOutlined />}>删除</Button>
           </Popconfirm>

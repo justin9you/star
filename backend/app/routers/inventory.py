@@ -196,9 +196,10 @@ async def list_products(
     brand_id: Optional[int] = None,
     category_id: Optional[int] = None,
     keyword: Optional[str] = None,
+    only_active: bool = False,
     db: Session = Depends(get_db)
 ):
-    items, total = inventory_service.get_products(db, page, page_size, brand_id, category_id, keyword)
+    items, total = inventory_service.get_products(db, page, page_size, brand_id, category_id, keyword, only_active)
     result_items = []
     for i in items:
         brand = inventory_service.get_brand(db, i.brand_id)
@@ -207,7 +208,9 @@ async def list_products(
             "id": i.id, "name": i.name, "brand_id": i.brand_id, "category_id": i.category_id,
             "brand_name": brand.name if brand else "未知", "category_name": cat.name if cat else "未知",
             "spec": i.spec, "purchase_price": float(i.purchase_price), "sale_price": float(i.sale_price),
-            "unit": i.unit, "qr_code": i.qr_code, "barcode": i.barcode, "remark": i.remark, "created_at": i.created_at.isoformat()
+            "unit": i.unit, "qr_code": i.qr_code, "barcode": i.barcode,
+            "status": i.status if i.status is not None else True,
+            "remark": i.remark, "created_at": i.created_at.isoformat()
         })
     return {"items": result_items, "total": total, "page": page, "page_size": page_size, "total_pages": (total + page_size - 1) // page_size}
 
@@ -223,7 +226,9 @@ async def get_product(product_id: int, db: Session = Depends(get_db)):
         "id": p.id, "name": p.name, "brand_id": p.brand_id, "category_id": p.category_id,
         "brand_name": brand.name if brand else "未知", "category_name": cat.name if cat else "未知",
         "spec": p.spec, "purchase_price": float(p.purchase_price), "sale_price": float(p.sale_price),
-        "unit": p.unit, "qr_code": p.qr_code, "barcode": p.barcode, "remark": p.remark, "created_at": p.created_at.isoformat()
+        "unit": p.unit, "qr_code": p.qr_code, "barcode": p.barcode,
+        "status": p.status if p.status is not None else True,
+        "remark": p.remark, "created_at": p.created_at.isoformat()
     })
 
 

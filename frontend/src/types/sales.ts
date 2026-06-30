@@ -94,6 +94,11 @@ export interface SalesOrder {
   paid_amount?: number;
   status: string;
   remark?: string;
+  created_by?: number;
+  created_by_name?: string;
+  cancel_reason?: string;
+  cancelled_at?: string;
+  cancelled_by_name?: string;
   created_at: string;
   items: SalesOrderItem[];
   old_appliances: OldAppliance[];

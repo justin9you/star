@@ -141,6 +141,10 @@ class SalesOrderResponse(BaseModel):
     status: str
     paid_amount: Decimal = Decimal("0")
     remark: Optional[str] = None
+    created_by: Optional[int] = None
+    created_by_name: Optional[str] = None
+    cancel_reason: Optional[str] = None
+    cancelled_at: Optional[datetime] = None
     created_at: datetime
     items: List[SalesOrderItemResponse] = []
     old_appliances: List[OldApplianceResponse] = []

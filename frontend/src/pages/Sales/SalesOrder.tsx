@@ -32,7 +32,7 @@ export default function SalesOrder() {
     const loadInitialData = async () => {
       const [custRes, prodRes, whRes, brandRes, categoryRes] = await Promise.all([
         salesApi.getCustomers(1, 100),
-        inventoryApi.getProducts(1, 100),
+        inventoryApi.getProducts(1, 100, { onlyActive: true }),
         inventoryApi.getWarehouses(1, 100),
         inventoryApi.getBrands(1, 100),
         inventoryApi.getCategories(1, 100),

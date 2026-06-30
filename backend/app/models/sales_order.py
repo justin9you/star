@@ -44,10 +44,17 @@ class SalesOrder(Base):
     payment_status = Column(String(20), default=PaymentStatus.UNPAID.value, comment="收款状态")
     status = Column(String(20), default=OrderStatus.ACTIVE.value, comment="订单状态")
     remark = Column(String(255), comment="备注")
+    created_by = Column(Integer, ForeignKey("users.id"), comment="开单人ID")
+    # 作废审计
+    cancel_reason = Column(String(255), comment="作废原因")
+    cancelled_at = Column(DateTime, comment="作废时间")
+    cancelled_by = Column(Integer, ForeignKey("users.id"), comment="作废人ID")
     created_at = Column(DateTime, default=datetime.utcnow, comment="开单时间")
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     customer = relationship("Customer", back_populates="sales_orders")
+    creator = relationship("User", foreign_keys=[created_by])
+    canceller = relationship("User", foreign_keys=[cancelled_by])
     items = relationship("SalesOrderItem", back_populates="order", cascade="all, delete-orphan")
     old_appliances = relationship("OldAppliance", back_populates="sales_order")
     stock_ledgers = relationship("StockLedger", back_populates="order", cascade="all, delete-orphan")

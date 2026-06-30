@@ -107,6 +107,45 @@ class TestProductManagement:
         assert data["success"] is True
         assert data["data"]["name"] == "测试商品"
 
+    def test_product_default_status_active(self, client, auth_headers):
+        """新建商品默认上架"""
+        create_resp = client.post("/api/v1/inventory/products", json={
+            "name": "默认上架商品",
+            "brand_id": self.brand_id,
+            "category_id": self.category_id,
+            "purchase_price": 100.00,
+            "sale_price": 150.00,
+        }, headers=auth_headers)
+        product_id = create_resp.json()["data"]["id"]
+        detail = client.get(f"/api/v1/inventory/products/{product_id}").json()["data"]
+        assert detail["status"] is True
+
+    def test_disable_product_excluded_from_active_list(self, client, auth_headers):
+        """停用商品后，only_active 列表不再返回"""
+        create_resp = client.post("/api/v1/inventory/products", json={
+            "name": "待停用商品",
+            "brand_id": self.brand_id,
+            "category_id": self.category_id,
+            "purchase_price": 100.00,
+            "sale_price": 150.00,
+        }, headers=auth_headers)
+        product_id = create_resp.json()["data"]["id"]
+
+        # 停用
+        upd = client.put(f"/api/v1/inventory/products/{product_id}",
+                         json={"status": False}, headers=auth_headers)
+        assert upd.status_code == 200
+
+        # only_active 列表中不应包含
+        active = client.get("/api/v1/inventory/products?only_active=true&page_size=100").json()
+        assert all(p["id"] != product_id for p in active["items"])
+
+        # 普通列表仍能查到，且状态为停用
+        all_list = client.get("/api/v1/inventory/products?page_size=100").json()
+        found = next((p for p in all_list["items"] if p["id"] == product_id), None)
+        assert found is not None
+        assert found["status"] is False
+
     def test_scan_product_by_qrcode(self, client, auth_headers):
         """通过二维码扫描商品"""
         # 创建带二维码的商品

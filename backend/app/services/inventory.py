@@ -300,12 +300,15 @@ def create_product(db: Session, name: str, brand_id: int, category_id: int,
 
 def get_products(db: Session, page: int = 1, page_size: int = 20,
                  brand_id: Optional[int] = None, category_id: Optional[int] = None,
-                 keyword: Optional[str] = None) -> tuple[list[Product], int]:
+                 keyword: Optional[str] = None, only_active: bool = False) -> tuple[list[Product], int]:
     query = db.query(Product)
     if brand_id:
         query = query.filter(Product.brand_id == brand_id)
     if category_id:
         query = query.filter(Product.category_id == category_id)
+    if only_active:
+        # 兼容老数据：status 为 NULL 视为上架
+        query = query.filter(or_(Product.status == True, Product.status.is_(None)))
     if keyword:
         query = query.filter(or_(
             Product.name.contains(keyword),
