@@ -21,6 +21,7 @@ import { useAuthStore } from '../../stores/authStore'
 import { authApi } from '../../services/authApi'
 import { useElderModeStore } from '../../stores/elderModeStore'
 import { usePrivacyStore } from '../../stores/privacyStore'
+import IdlePrivacyGuard from './IdlePrivacyGuard'
 import styles from './MainLayout.module.css'
 
 const { Sider, Content, Header } = Layout
@@ -209,6 +210,7 @@ export default function MainLayout() {
           <Outlet />
         </Content>
       </Layout>
+      <IdlePrivacyGuard />
     </Layout>
   )
 }
