@@ -144,7 +144,7 @@ export default function CustomerManagement() {
             placeholder="搜索姓名/电话"
             onSearch={setKeyword}
             allowClear
-            style={{ width: 200 }}
+            style={{ width: 420 }}
           />
           <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>新增客户</Button>
         </Space>
@@ -155,7 +155,6 @@ export default function CustomerManagement() {
         dataSource={customers}
         rowKey="id"
         loading={loading}
-        scroll={{ x: 1000 }}
         pagination={{
           current: page,
           total,

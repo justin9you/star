@@ -115,11 +115,11 @@ export default function PurchaseOrderList() {
     },
     { title: '单位', dataIndex: 'product_unit', key: 'product_unit', width: 60 },
     { title: '数量', dataIndex: 'quantity', key: 'quantity', width: 60 },
-    { title: '单价', dataIndex: 'unit_price', key: 'unit_price', width: 90,
+    { title: '单价', dataIndex: 'unit_price', key: 'unit_price', width: 110,
       render: (v: number, record: PurchaseOrderItem) =>
         record.is_gift ? <Tag color="orange">搭送</Tag> : `¥${Number(v).toFixed(2)}`,
     },
-    { title: '小计', dataIndex: 'subtotal', key: 'subtotal', width: 90,
+    { title: '小计', dataIndex: 'subtotal', key: 'subtotal', width: 120,
       render: (v: number, record: PurchaseOrderItem) =>
         record.is_gift ? '-' : `¥${Number(v).toFixed(2)}`,
     },
@@ -163,7 +163,6 @@ export default function PurchaseOrderList() {
         dataSource={orders}
         rowKey="id"
         loading={loading}
-        scroll={{ x: 1000 }}
         pagination={{
           current: page,
           total,
@@ -178,7 +177,7 @@ export default function PurchaseOrderList() {
         open={detailOpen}
         onCancel={() => setDetailOpen(false)}
         footer={null}
-        width={720}
+        width={960}
         loading={detailLoading}
       >
         {currentOrder && (

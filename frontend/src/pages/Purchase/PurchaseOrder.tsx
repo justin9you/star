@@ -122,13 +122,16 @@ export default function PurchaseOrder() {
       return
     }
 
-    if (products.length === 1) {
-      addItem(products[0])
-      message.success(`已添加: ${products[0].name}`)
+    if (products.length === 0) {
+      message.info('未找到商品')
+    } else {
+      // 多个匹配时优先精确匹配商品名称，否则取第一个候选
+      const exact = products.find(p => p.name.trim() === val)
+      const target = exact || products[0]
+      addItem(target)
+      message.success(`已添加: ${target.name}`)
       setInputValue('')
       setProducts([])
-    } else if (products.length === 0) {
-      message.info('未找到商品')
     }
     setTimeout(() => inputRef.current?.focus(), 100)
   }
@@ -292,12 +295,12 @@ export default function PurchaseOrder() {
             />
           </Space>
         </Col>
-        <Col span={6}>
+        <Col span={12}>
           <Space>
             <span>供应商:</span>
-            <Input placeholder="名称" style={{ width: 120 }} value={supplierName}
+            <Input placeholder="名称" style={{ width: 200 }} value={supplierName}
               onChange={e => setSupplierName(e.target.value)} />
-            <Input placeholder="电话" style={{ width: 120 }} value={supplierPhone}
+            <Input placeholder="电话" style={{ width: 200 }} value={supplierPhone}
               onChange={e => setSupplierPhone(e.target.value)} />
           </Space>
         </Col>
@@ -306,6 +309,7 @@ export default function PurchaseOrder() {
       <div style={{ marginBottom: 16 }}>
         <AutoComplete
           ref={inputRef}
+          size="large"
           style={{ width: '100%', maxWidth: 500 }}
           value={inputValue}
           options={options}
@@ -314,6 +318,7 @@ export default function PurchaseOrder() {
           onChange={(val) => { if (typeof val === 'string') setInputValue(val) }}
         >
           <Input.Search
+            className="scan-add-search"
             placeholder="扫码或搜索商品名称"
             prefix={<ScanOutlined />}
             enterButton={<><SearchOutlined /> 添加</>}
@@ -323,7 +328,7 @@ export default function PurchaseOrder() {
             onPressEnter={handleSearch}
           />
         </AutoComplete>
-        <div style={{ marginTop: 8, color: '#999', fontSize: 12 }}>
+        <div className="scan-hint" style={{ marginTop: 8 }}>
           支持扫码枪扫描，或输入商品名称搜索
         </div>
       </div>
@@ -334,7 +339,6 @@ export default function PurchaseOrder() {
         rowKey="key"
         pagination={false}
         size="small"
-        scroll={{ x: 800 }}
         summary={() => (
           <Table.Summary.Row>
             <Table.Summary.Cell index={0} colSpan={5}><strong>合计</strong></Table.Summary.Cell>
@@ -369,7 +373,7 @@ export default function PurchaseOrder() {
         </Col>
         <Col span={12} style={{ textAlign: 'right' }}>
           <Space>
-            <Button onClick={() => {
+            <Button size="large" onClick={() => {
               setItems([])
               setSupplierName('')
               setSupplierPhone('')

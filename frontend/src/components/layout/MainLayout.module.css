@@ -2,9 +2,17 @@
   min-height: 100vh;
 }
 
+/* 右侧内容区底色，衬托白色卡片 */
+.innerLayout {
+  background: #f4f6fa;
+}
+
+/* ===================== 侧边栏 ===================== */
 .sider {
-  background: #fff;
-  border-right: 1px solid #f0f0f0;
+  background: linear-gradient(180deg, #232d42 0%, #151c2c 100%) !important;
+  box-shadow: 2px 0 12px rgba(0, 0, 0, 0.12);
+  position: relative;
+  z-index: 10;
 }
 
 .logo {
@@ -12,25 +20,121 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 11px;
+  color: #fff;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.logoText {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  line-height: 1.2;
+}
+
+.logoName {
   font-size: 18px;
-  font-weight: 600;
-  color: #333;
-  border-bottom: 1px solid #f0f0f0;
+  font-weight: 700;
+  letter-spacing: 2px;
 }
 
+.logoEn {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 1.8px;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.logoMark {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #1677ff 0%, #4096ff 100%);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1;
+  box-shadow: 0 2px 8px rgba(22, 119, 255, 0.4);
+  flex-shrink: 0;
+}
+
+/* 菜单容器 */
 .menu {
-  border-right: none;
+  border-right: none !important;
+  background: transparent !important;
+  padding: 14px 12px;
 }
 
+/* 让侧栏渐变透出（覆盖 antd 暗色菜单默认底色） */
+.sider :global(.ant-menu.ant-menu-dark),
+.sider :global(.ant-menu-dark .ant-menu-sub) {
+  background: transparent !important;
+}
+
+.sider :global(.ant-menu-dark .ant-menu-item),
+.sider :global(.ant-menu-dark .ant-menu-submenu-title) {
+  color: rgba(255, 255, 255, 0.72);
+  border-radius: 10px;
+  margin: 4px 0;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.sider :global(.ant-menu-dark .ant-menu-item:hover),
+.sider :global(.ant-menu-dark .ant-menu-submenu-title:hover) {
+  color: #fff !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* 选中项：品牌蓝渐变胶囊 + 阴影 */
+.sider :global(.ant-menu-dark .ant-menu-item-selected) {
+  background: linear-gradient(90deg, #1677ff 0%, #4096ff 100%) !important;
+  color: #fff !important;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(22, 119, 255, 0.35);
+}
+
+/* 展开的二级菜单项 */
+.sider :global(.ant-menu-dark .ant-menu-sub .ant-menu-item) {
+  background: transparent !important;
+  padding-left: 48px !important;
+}
+
+.sider :global(.ant-menu-dark .ant-menu-sub .ant-menu-item:hover) {
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
+.sider :global(.ant-menu-dark .ant-menu-sub .ant-menu-item-selected) {
+  background: linear-gradient(90deg, #1677ff 0%, #4096ff 100%) !important;
+}
+
+/* 父级展开时标题保持高亮文字 */
+.sider :global(.ant-menu-dark .ant-menu-submenu-selected > .ant-menu-submenu-title) {
+  color: #fff !important;
+}
+
+/* 图标稍大一点更醒目 */
+.sider :global(.ant-menu-item .anticon),
+.sider :global(.ant-menu-submenu-title .anticon) {
+  font-size: 17px;
+}
+
+/* ===================== 顶部 ===================== */
 .header {
+  height: 64px;
   background: #fff;
   padding: 0 24px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid #f0f0f0;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+  border-bottom: 1px solid #eef0f4;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+  position: sticky;
+  top: 0;
+  z-index: 9;
 }
 
 .headerLeft {
@@ -38,37 +142,135 @@
   align-items: center;
 }
 
+.titleBar {
+  width: 4px;
+  height: 22px;
+  border-radius: 4px;
+  background: linear-gradient(180deg, #1677ff 0%, #4096ff 100%);
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
 .title {
-  font-size: 16px;
+  display: inline-flex;
+  align-items: baseline;
+}
+
+.titleBrand {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  background: linear-gradient(90deg, #1677ff 0%, #4096ff 60%, #69b1ff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+.titleSep {
+  width: 1px;
+  height: 16px;
+  background: #d9dee6;
+  margin: 0 10px;
+  align-self: center;
+}
+
+.titleSub {
+  font-size: 15px;
   font-weight: 500;
-  color: #333;
+  letter-spacing: 2px;
+  color: #6b7280;
 }
 
 .headerRight {
   display: flex;
   align-items: center;
-  gap: 16px;
-}
-
-.user {
-  color: #666;
+  gap: 8px;
 }
 
 .elderBtn {
-  color: #666;
+  color: #4b5563;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border-radius: 8px;
+  padding: 4px 12px;
+  height: 36px;
+  transition: all 0.2s ease;
+}
+
+.elderBtn:hover {
+  color: #1677ff !important;
+  background: #f0f6ff !important;
+}
+
+.headerDivider {
+  width: 1px;
+  height: 24px;
+  background: #e5e7eb;
+  margin: 0 6px;
+}
+
+.userBox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 4px;
+}
+
+.avatar {
+  background: linear-gradient(135deg, #1677ff, #4096ff) !important;
+  flex-shrink: 0;
+}
+
+.user {
+  color: #374151;
+  font-weight: 500;
+}
+
+.logoutBtn {
+  color: #ef4444;
+  border-radius: 8px;
+  height: 36px;
   display: flex;
   align-items: center;
   gap: 4px;
 }
 
-.elderBtn:hover {
-  color: #1890ff;
+.logoutBtn:hover {
+  color: #ef4444 !important;
+  background: #fef2f2 !important;
 }
 
+/* ===================== 内容区 ===================== */
 .content {
-  margin: 24px;
+  margin: 20px;
   padding: 24px;
   background: #fff;
-  border-radius: 8px;
-  min-height: calc(100vh - 64px - 48px);
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  min-height: calc(100vh - 64px - 40px);
+}
+
+/* ===================== 关爱版（大字） ===================== */
+:global(.elder-mode) .titleBrand {
+  font-size: 24px !important;
+}
+
+:global(.elder-mode) .titleSub {
+  font-size: 18px !important;
+}
+
+:global(.elder-mode) .user,
+:global(.elder-mode) .logoutBtn,
+:global(.elder-mode) .elderBtn {
+  font-size: 18px !important;
+}
+
+:global(.elder-mode) .logoName {
+  font-size: 22px !important;
+}
+
+:global(.elder-mode) .logoEn {
+  font-size: 11px !important;
 }

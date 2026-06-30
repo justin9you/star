@@ -119,7 +119,6 @@ export default function WarehouseManagement() {
         dataSource={warehouses}
         rowKey="id"
         loading={loading}
-        scroll={{ x: 800 }}
         pagination={{
           current: page,
           total,

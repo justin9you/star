@@ -119,7 +119,6 @@ export default function CategoryManagement() {
         dataSource={categories}
         rowKey="id"
         loading={loading}
-        scroll={{ x: 600 }}
         pagination={{
           current: page,
           total,

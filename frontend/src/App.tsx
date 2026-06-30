@@ -12,7 +12,8 @@ import InventoryList from './pages/Inventory/InventoryList'
 import CustomerManagement from './pages/Sales/CustomerManagement'
 import SalesOrder from './pages/Sales/SalesOrder'
 import OrderList from './pages/Sales/OrderList'
-import DispatchList from './pages/Sales/DispatchList'
+// 派工单暂时隐藏（仅需销售功能），代码保留
+// import DispatchList from './pages/Sales/DispatchList'
 import PurchaseOrder from './pages/Purchase/PurchaseOrder'
 import PurchaseOrderList from './pages/Purchase/PurchaseOrderList'
 import DailyReport from './pages/Report/DailyReport'
@@ -45,7 +46,8 @@ function App() {
           <Route path="customers" element={<CustomerManagement />} />
           <Route path="order" element={<SalesOrder />} />
           <Route path="orders" element={<OrderList />} />
-          <Route path="dispatch" element={<DispatchList />} />
+          {/* 派工单暂时隐藏（仅需销售功能），代码保留 */}
+          {/* <Route path="dispatch" element={<DispatchList />} /> */}
         </Route>
         <Route path="purchase">
           <Route path="order" element={<PurchaseOrder />} />

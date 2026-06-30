@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { Modal, Select, InputNumber, Button, Divider, message } from 'antd'
+import { useState, useEffect, type CSSProperties } from 'react'
+import { Modal, Select, InputNumber, Button, Input, Tag, message } from 'antd'
 import { PlusOutlined, DeleteOutlined } from '@ant-design/icons'
 import { salesApi } from '../../../services/salesApi'
 import { PAYMENT_METHODS } from '../../../types/sales'
@@ -67,6 +67,15 @@ export default function PaymentModal({ open, orderId, finalAmount, onSuccess, on
     setPayments(updated)
   }
 
+  // 一键收全款：合并为单行并填入剩余待收金额
+  const fillRemaining = () => {
+    setPayments([{
+      payment_method: payments[0]?.payment_method || '现金',
+      amount: Number(remaining.toFixed(2)),
+      remark: payments[0]?.remark || '',
+    }])
+  }
+
   const handleSubmit = async () => {
     if (!isValid) {
       message.error('请检查付款金额')
@@ -92,59 +101,111 @@ export default function PaymentModal({ open, orderId, finalAmount, onSuccess, on
     }
   }
 
+  const sectionLabel: CSSProperties = {
+    fontSize: 13,
+    fontWeight: 600,
+    color: '#262626',
+    marginBottom: 12,
+  }
+  const isCleared = remaining <= 0
+
   return (
     <Modal
       title="收款"
+      className="payment-modal"
       open={open}
       onCancel={onCancel}
       onOk={handleSubmit}
       okText="确认收款"
       okButtonProps={{ loading, disabled: !isValid }}
-      width={500}
+      width={560}
     >
-      <div style={{ marginBottom: 16 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-          <span>订单金额：</span>
-          <strong>¥{finalAmount.toFixed(2)}</strong>
-        </div>
-        {existingTotal > 0 && (
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, color: '#52c41a' }}>
-            <span>已收款：</span>
-            <span>¥{existingTotal.toFixed(2)}</span>
-          </div>
-        )}
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, fontWeight: 'bold' }}>
-          <span>待收款：</span>
-          <span style={{ color: remaining > 0 ? '#cf1322' : '#52c41a' }}>
+      {/* 金额概览：待收款为主视觉 */}
+      <div
+        style={{
+          background: isCleared ? '#f6ffed' : '#fff7f6',
+          border: `1px solid ${isCleared ? '#d9f7be' : '#ffd8d3'}`,
+          borderRadius: 10,
+          padding: '18px 20px',
+          margin: '4px 0 20px',
+        }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+          <span style={{ color: '#8c8c8c', fontSize: 13 }}>待收款</span>
+          <span
+            style={{
+              fontSize: 30,
+              fontWeight: 700,
+              lineHeight: 1.1,
+              color: isCleared ? '#52c41a' : '#cf1322',
+            }}
+          >
             ¥{remaining.toFixed(2)}
+          </span>
+        </div>
+        <div
+          style={{
+            display: 'flex',
+            gap: 28,
+            marginTop: 14,
+            paddingTop: 14,
+            borderTop: '1px dashed rgba(0,0,0,0.08)',
+            fontSize: 13,
+            color: '#595959',
+          }}
+        >
+          <span>
+            订单金额 <strong style={{ color: '#262626', marginLeft: 4 }}>¥{finalAmount.toFixed(2)}</strong>
+          </span>
+          <span>
+            已收款 <strong style={{ color: '#52c41a', marginLeft: 4 }}>¥{existingTotal.toFixed(2)}</strong>
           </span>
         </div>
       </div>
 
       {existingPayments.length > 0 && (
-        <>
-          <div style={{ marginBottom: 16 }}>
-            <strong>已收款项：</strong>
-            {existingPayments.map(p => (
-              <div key={p.id} style={{ padding: '4px 0', borderBottom: '1px dashed #eee' }}>
-                <span style={{ marginRight: 8 }}>{p.payment_method}</span>
-                <strong>¥{p.amount.toFixed(2)}</strong>
-                {p.created_by_name && <span style={{ color: '#999', marginLeft: 8, fontSize: 12 }}>({p.created_by_name})</span>}
+        <div style={{ marginBottom: 20 }}>
+          <div style={sectionLabel}>已收款项</div>
+          <div style={{ border: '1px solid #f0f0f0', borderRadius: 8, overflow: 'hidden' }}>
+            {existingPayments.map((p, i) => (
+              <div
+                key={p.id}
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  padding: '10px 14px',
+                  background: i % 2 ? '#fafafa' : '#fff',
+                }}
+              >
+                <span>
+                  <Tag color="blue" style={{ marginRight: 8 }}>{p.payment_method}</Tag>
+                  {p.created_by_name && (
+                    <span style={{ color: '#999', fontSize: 12 }}>{p.created_by_name}</span>
+                  )}
+                </span>
+                <strong style={{ color: '#262626' }}>¥{p.amount.toFixed(2)}</strong>
               </div>
             ))}
           </div>
-          <Divider />
-        </>
+        </div>
       )}
 
       <div>
-        <div style={{ marginBottom: 8, fontWeight: 'bold' }}>新增收款：</div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+          <span style={{ ...sectionLabel, marginBottom: 0 }}>新增收款</span>
+          {!isCleared && (
+            <Button type="link" size="small" style={{ padding: 0 }} onClick={fillRemaining}>
+              收全款
+            </Button>
+          )}
+        </div>
         {payments.map((payment, index) => (
-          <div key={index} style={{ display: 'flex', gap: 8, marginBottom: 8, alignItems: 'center' }}>
+          <div key={index} style={{ display: 'flex', gap: 8, marginBottom: 10, alignItems: 'center' }}>
             <Select
               value={payment.payment_method}
               onChange={(v) => updatePayment(index, 'payment_method', v)}
-              style={{ width: 120 }}
+              style={{ width: 110 }}
               options={PAYMENT_METHODS.map(m => ({ value: m.value, label: m.label }))}
             />
             <InputNumber
@@ -153,19 +214,23 @@ export default function PaymentModal({ open, orderId, finalAmount, onSuccess, on
               min={0}
               max={remaining}
               precision={2}
-              style={{ width: 120 }}
+              prefix="¥"
+              style={{ width: 140 }}
               placeholder="金额"
             />
-            <input
-              type="text"
+            <Input
               value={payment.remark || ''}
               onChange={(e) => updatePayment(index, 'remark', e.target.value)}
               placeholder="备注（可选）"
-              style={{ flex: 1, padding: '4px 8px', border: '1px solid #d9d9d9', borderRadius: 4 }}
+              style={{ flex: 1 }}
             />
-            {payments.length > 1 && (
-              <Button type="text" danger icon={<DeleteOutlined />} onClick={() => removePayment(index)} />
-            )}
+            <Button
+              type="text"
+              danger
+              icon={<DeleteOutlined />}
+              disabled={payments.length <= 1}
+              onClick={() => removePayment(index)}
+            />
           </div>
         ))}
         <Button type="dashed" icon={<PlusOutlined />} onClick={addPayment} style={{ width: '100%' }}>
@@ -173,15 +238,25 @@ export default function PaymentModal({ open, orderId, finalAmount, onSuccess, on
         </Button>
       </div>
 
-      <Divider />
-      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 16 }}>
-        <span>本次收款：</span>
-        <strong style={{ color: totalNew > remaining ? '#cf1322' : '#1890ff' }}>
+      {/* 本次收款合计 */}
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginTop: 20,
+          padding: '14px 16px',
+          background: '#fafafa',
+          borderRadius: 8,
+        }}
+      >
+        <span style={{ fontSize: 14, color: '#595959' }}>本次收款</span>
+        <strong style={{ fontSize: 20, color: totalNew > remaining ? '#cf1322' : '#1677ff' }}>
           ¥{totalNew.toFixed(2)}
         </strong>
       </div>
       {totalNew > remaining && (
-        <div style={{ color: '#cf1322', marginTop: 8 }}>
+        <div style={{ color: '#cf1322', marginTop: 8, fontSize: 13 }}>
           收款金额超出待收金额 ¥{(totalNew - remaining).toFixed(2)}
         </div>
       )}

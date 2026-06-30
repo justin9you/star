@@ -99,7 +99,7 @@ export default function BrandManagement() {
             placeholder="搜索品牌"
             onSearch={setKeyword}
             allowClear
-            style={{ width: 200 }}
+            style={{ width: 420 }}
           />
           <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>新增品牌</Button>
         </Space>
@@ -110,7 +110,6 @@ export default function BrandManagement() {
         dataSource={brands}
         rowKey="id"
         loading={loading}
-        scroll={{ x: 600 }}
         pagination={{
           current: page,
           total,

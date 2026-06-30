@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react'
 import { Card, Table, Button, Modal, Descriptions, Tag, Space, Input, Select, DatePicker, App } from 'antd'
-import { EyeOutlined, PrinterOutlined, ToolOutlined } from '@ant-design/icons'
+import { EyeOutlined, PrinterOutlined } from '@ant-design/icons'
 import { useSearchParams } from 'react-router-dom'
 import dayjs from 'dayjs'
 import { salesApi } from '../../services/salesApi'
 import type { SalesOrder, SalesOrderItem } from '../../types/sales'
 import PaymentModal from './components/PaymentModal'
-import DispatchPrintModal from './components/DispatchPrintModal'
+// 派工单暂时隐藏（仅需销售功能），代码保留
+// import DispatchPrintModal from './components/DispatchPrintModal'
 
 const PAYMENT_STATUS_MAP: Record<string, { color: string; text: string }> = {
   '未付款': { color: 'red', text: '未付款' },
@@ -83,8 +84,9 @@ export default function OrderList() {
   const [paymentModalOpen, setPaymentModalOpen] = useState(false)
   const [paymentOrderId, setPaymentOrderId] = useState<number | null>(null)
   const [paymentFinalAmount, setPaymentFinalAmount] = useState(0)
-  const [dispatchModalOpen, setDispatchModalOpen] = useState(false)
-  const [dispatchOrder, setDispatchOrder] = useState<SalesOrder | null>(null)
+  // 派工单暂时隐藏（仅需销售功能），代码保留
+  // const [dispatchModalOpen, setDispatchModalOpen] = useState(false)
+  // const [dispatchOrder, setDispatchOrder] = useState<SalesOrder | null>(null)
 
   useEffect(() => {
     loadOrders()
@@ -179,17 +181,18 @@ export default function OrderList() {
     loadOrders()
   }
 
-  const openDispatchModal = async (order: SalesOrder) => {
-    try {
-      const res = await salesApi.getOrder(order.id)
-      if (res.data) {
-        setDispatchOrder(res.data as SalesOrder)
-        setDispatchModalOpen(true)
-      }
-    } catch {
-      message.error('获取订单详情失败')
-    }
-  }
+  // 派工单暂时隐藏（仅需销售功能），代码保留
+  // const openDispatchModal = async (order: SalesOrder) => {
+  //   try {
+  //     const res = await salesApi.getOrder(order.id)
+  //     if (res.data) {
+  //       setDispatchOrder(res.data as SalesOrder)
+  //       setDispatchModalOpen(true)
+  //     }
+  //   } catch {
+  //     message.error('获取订单详情失败')
+  //   }
+  // }
 
   const confirmPrint = (orderId: number) => {
     handlePrint(orderId)
@@ -423,9 +426,10 @@ export default function OrderList() {
           {(record.payment_status === '未付款' || record.payment_status === '部分付款') && record.status === '有效' && (
             <Button type="link" size="small" onClick={() => confirmMarkPaid(record.id, record.final_amount)}>收款</Button>
           )}
+          {/* 派工单暂时隐藏（仅需销售功能），代码保留
           {record.status === '有效' && (
             <Button type="link" size="small" icon={<ToolOutlined />} onClick={() => openDispatchModal(record)}>派工</Button>
-          )}
+          )} */}
           {record.status === '有效' && (
             <Button type="link" size="small" danger onClick={() => confirmCancel(record.id)}>作废</Button>
           )}
@@ -449,7 +453,7 @@ export default function OrderList() {
             placeholder="搜索订单号"
             onSearch={setKeyword}
             allowClear
-            style={{ width: 200 }}
+            style={{ width: 420 }}
           />
           <Select
             placeholder="付款状态"
@@ -498,7 +502,7 @@ export default function OrderList() {
         open={detailOpen}
         onCancel={() => setDetailOpen(false)}
         footer={null}
-        width={700}
+        width={960}
       >
         {detailOrder && (
           <>
@@ -582,10 +586,10 @@ export default function OrderList() {
                 <h4 style={{ marginTop: 16 }}>付款记录</h4>
                 <Table
                   columns={[
-                    { title: '支付方式', dataIndex: 'payment_method', key: 'payment_method', width: 100 },
+                    { title: '支付方式', dataIndex: 'payment_method', key: 'payment_method', width: 130, render: (v: string) => <span style={{ whiteSpace: 'nowrap' }}>{v || '-'}</span> },
                     { title: '金额', dataIndex: 'amount', key: 'amount', width: 100, render: (v: number) => `¥${v.toFixed(2)}` },
                     { title: '备注', dataIndex: 'remark', key: 'remark', render: (v: string) => v || '-' },
-                    { title: '时间', dataIndex: 'created_at', key: 'created_at', width: 140, render: (v: string) => v?.replace('T', ' ').slice(0, 16) },
+                    { title: '时间', dataIndex: 'created_at', key: 'created_at', width: 170, render: (v: string) => <span style={{ whiteSpace: 'nowrap' }}>{v?.replace('T', ' ').slice(0, 16) || '-'}</span> },
                   ]}
                   dataSource={detailOrder.payments}
                   rowKey="id"
@@ -610,6 +614,7 @@ export default function OrderList() {
         onCancel={() => setPaymentModalOpen(false)}
       />
 
+      {/* 派工单暂时隐藏（仅需销售功能），代码保留
       <DispatchPrintModal
         open={dispatchModalOpen}
         orderNo={dispatchOrder?.order_no || ''}
@@ -619,7 +624,7 @@ export default function OrderList() {
         paymentStatus={dispatchOrder?.payment_status}
         items={dispatchOrder?.items || []}
         onCancel={() => setDispatchModalOpen(false)}
-      />
+      /> */}
     </Card>
   )
 }

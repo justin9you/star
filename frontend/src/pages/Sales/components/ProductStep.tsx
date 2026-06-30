@@ -8,9 +8,9 @@ import type { ProductCreate } from '../../../types/inventory'
 
 const ITEM_COLUMNS = [
   { title: '商品名称', dataIndex: 'product_name', key: 'product_name' },
-  { title: '单位', dataIndex: 'unit', key: 'unit', width: 60 },
-  { title: '单价', dataIndex: 'unit_price', key: 'unit_price', width: 90, render: (v: number) => `¥${v.toFixed(2)}` },
-  { title: '小计', dataIndex: 'subtotal', key: 'subtotal', width: 100, render: (v: number) => `¥${v.toFixed(2)}` },
+  { title: '单位', dataIndex: 'unit', key: 'unit', width: 70, align: 'center' as const },
+  { title: '单价', dataIndex: 'unit_price', key: 'unit_price', width: 110, align: 'right' as const, render: (v: number) => `¥${v.toFixed(2)}` },
+  { title: '小计', dataIndex: 'subtotal', key: 'subtotal', width: 120, align: 'right' as const, render: (v: number) => `¥${v.toFixed(2)}` },
 ]
 
 const OLD_COLUMNS = [
@@ -284,6 +284,7 @@ export function ProductStep({ state, onStateChange, onNext, onPrev, onProductsUp
           }}
         >
           <Input.Search
+            className="scan-add-search"
             placeholder="扫码或搜索商品名称"
             prefix={<ScanOutlined />}
             enterButton={<><SearchOutlined /> 添加</>}
@@ -293,7 +294,7 @@ export function ProductStep({ state, onStateChange, onNext, onPrev, onProductsUp
             onPressEnter={handleSearch}
           />
         </AutoComplete>
-        <div style={{ marginTop: 8, color: '#999', fontSize: 12 }}>
+        <div className="scan-hint" style={{ marginTop: 8 }}>
           支持扫码枪直接扫描，或输入商品名称搜索选择
         </div>
       </div>
@@ -318,9 +319,9 @@ export function ProductStep({ state, onStateChange, onNext, onPrev, onProductsUp
         size="small"
         summary={() => (
           <Table.Summary.Row>
-            <Table.Summary.Cell index={0} colSpan={4}><strong>合计</strong></Table.Summary.Cell>
-            <Table.Summary.Cell index={4}><strong>¥{totalAmount.toFixed(2)}</strong></Table.Summary.Cell>
-            <Table.Summary.Cell index={5} />
+            <Table.Summary.Cell index={0} colSpan={3}><strong>合计</strong></Table.Summary.Cell>
+            <Table.Summary.Cell index={3} align="right"><strong>¥{totalAmount.toFixed(2)}</strong></Table.Summary.Cell>
+            <Table.Summary.Cell index={4} colSpan={2} />
           </Table.Summary.Row>
         )}
       />

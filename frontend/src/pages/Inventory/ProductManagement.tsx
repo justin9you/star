@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react'
-import { Card, Table, Button, Modal, Form, Input, InputNumber, Select, Space, message, Popconfirm, Tag, Tabs } from 'antd'
+import { Card, Table, Button, Modal, Form, Input, InputNumber, Select, Space, message, Popconfirm, Tag, Tabs, Row, Col } from 'antd'
 import { PlusOutlined, EditOutlined, DeleteOutlined, QrcodeOutlined, BarcodeOutlined } from '@ant-design/icons'
 import { QRCodeSVG } from 'qrcode.react'
 import JsBarcode from 'jsbarcode'
@@ -43,7 +43,6 @@ function BarcodeDisplay({ value }: { value: string }) {
   return (
     <div style={{ textAlign: 'center', padding: 20 }}>
       <canvas ref={canvasRef} />
-      <p style={{ marginTop: 16, fontSize: 16, color: '#666' }}>{value}</p>
     </div>
   )
 }
@@ -195,7 +194,7 @@ export default function ProductManagement() {
             placeholder="搜索商品名称/二维码/条形码"
             onSearch={setKeyword}
             allowClear
-            style={{ width: 280 }}
+            style={{ width: 420 }}
           />
           <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>新增商品</Button>
         </Space>
@@ -221,41 +220,63 @@ export default function ProductManagement() {
         open={modalOpen}
         onOk={handleSubmit}
         onCancel={() => setModalOpen(false)}
-        width={600}
+        width={720}
         okText="确定"
         cancelText="取消"
       >
         <Form form={form} layout="vertical">
-          <Form.Item name="name" label="商品名称" rules={[{ required: true }]}>
-            <Input placeholder="请输入商品名称" autoComplete="off" />
-          </Form.Item>
-          <Form.Item name="brand_id" label="品牌" rules={[{ required: true }]}>
-            <Select placeholder="请选择品牌" options={brands.map(b => ({ value: b.id, label: b.name }))} />
-          </Form.Item>
-          <Form.Item name="category_id" label="类型" rules={[{ required: true }]}>
-            <Select placeholder="请选择类型" options={categories.map(c => ({ value: c.id, label: c.name }))} />
-          </Form.Item>
-          <Form.Item name="spec" label="规格">
-            <Input placeholder="如：200L/1.5匹/8kg" autoComplete="off" />
-          </Form.Item>
-          <Form.Item name="purchase_price" label="进货价" rules={[{ required: !isPrivacyMode }]} style={isPrivacyMode ? { display: 'none' } : undefined}>
-            <InputNumber prefix="¥" min={0} precision={2} style={{ width: '100%' }} />
-          </Form.Item>
-          <Form.Item name="sale_price" label="销售价" rules={[{ required: true }]}>
-            <InputNumber prefix="¥" min={0} precision={2} style={{ width: '100%' }} />
-          </Form.Item>
-          <Form.Item name="unit" label="单位">
-            <Select options={[{ value: '台', label: '台' }, { value: '套', label: '套' }, { value: '件', label: '件' }]} />
-          </Form.Item>
-          <Form.Item name="qr_code" label="二维码">
-            <Input placeholder="扫码枪扫描录入" autoComplete="off" />
-          </Form.Item>
-          <Form.Item name="barcode" label="条形码">
-            <Input placeholder="扫码枪扫描录入" autoComplete="off" />
-          </Form.Item>
-          <Form.Item name="remark" label="备注">
-            <Input.TextArea rows={2} autoComplete="off" />
-          </Form.Item>
+          <Row gutter={16}>
+            <Col span={24}>
+              <Form.Item name="name" label="商品名称" rules={[{ required: true }]}>
+                <Input placeholder="请输入商品名称" autoComplete="off" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="brand_id" label="品牌" rules={[{ required: true }]}>
+                <Select placeholder="请选择品牌" options={brands.map(b => ({ value: b.id, label: b.name }))} />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="category_id" label="类型" rules={[{ required: true }]}>
+                <Select placeholder="请选择类型" options={categories.map(c => ({ value: c.id, label: c.name }))} />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="spec" label="规格">
+                <Input placeholder="如：200L/1.5匹/8kg" autoComplete="off" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="unit" label="单位">
+                <Select options={[{ value: '台', label: '台' }, { value: '套', label: '套' }, { value: '件', label: '件' }]} />
+              </Form.Item>
+            </Col>
+            <Col span={12} style={isPrivacyMode ? { display: 'none' } : undefined}>
+              <Form.Item name="purchase_price" label="进货价" rules={[{ required: !isPrivacyMode }]}>
+                <InputNumber prefix="¥" min={0} precision={2} style={{ width: '100%' }} />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="sale_price" label="销售价" rules={[{ required: true }]}>
+                <InputNumber prefix="¥" min={0} precision={2} style={{ width: '100%' }} />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="qr_code" label="二维码">
+                <Input placeholder="扫码枪扫描录入" autoComplete="off" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="barcode" label="条形码">
+                <Input placeholder="扫码枪扫描录入" autoComplete="off" />
+              </Form.Item>
+            </Col>
+            <Col span={24}>
+              <Form.Item name="remark" label="备注">
+                <Input.TextArea rows={2} autoComplete="off" />
+              </Form.Item>
+            </Col>
+          </Row>
         </Form>
       </Modal>
 

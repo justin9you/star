@@ -35,6 +35,37 @@ body {
   background: #a8a8a8;
 }
 
+/* 扫码搜索框（进货单创建 / 销售开单共用）：加宽「添加」按钮并与输入框严格同高对齐 */
+/* 标准版：输入框与按钮统一 40px */
+.scan-add-search .ant-input-affix-wrapper,
+.scan-add-search .ant-input-search-button {
+  height: 40px;
+}
+
+.scan-add-search .ant-input-search-button {
+  min-width: 110px;
+}
+
+/* 关爱版：输入框为 41px，把按钮也强制成 41px 与之对齐 */
+.elder-mode .scan-add-search .ant-input-affix-wrapper {
+  height: 41px !important;
+}
+
+.elder-mode .scan-add-search .ant-input-search-button {
+  height: 41px !important;
+  min-width: 110px !important;
+}
+
+/* 扫码搜索框下方提示语：标准版 12px，关爱版放大 */
+.scan-hint {
+  color: #999;
+  font-size: 12px;
+}
+
+.elder-mode .scan-hint {
+  font-size: 16px !important;
+}
+
 /* 中老年关爱版全局样式 — !important 覆盖 antd5 CSS-in-JS */
 .elder-mode {
   font-size: 18px !important;
@@ -81,6 +112,12 @@ body {
   font-size: 18px !important;
   padding: 8px 12px !important;
   line-height: 1.5 !important;
+}
+
+/* antd 默认 .ant-select-single { height: 32px } 会把外层下拉框锁在 32px，
+   与下面拉高到 41px 的 selector 不一致导致错位，这里改为 auto 让其跟随 selector */
+.elder-mode .ant-select-single {
+  height: auto !important;
 }
 
 .elder-mode .ant-select-selector {
@@ -204,6 +241,18 @@ body {
 
 .elder-mode .ant-input-search-lg .ant-input-group-addon {
   height: 48px !important;
+}
+
+/* 关爱版：带前缀图标的搜索框用 affix-wrapper 包裹，需单独拉高到 48px 与搜索按钮对齐 */
+.elder-mode .ant-input-search-lg .ant-input-affix-wrapper {
+  height: 48px !important;
+  padding: 4px 11px !important;
+}
+
+.elder-mode .ant-input-search-lg .ant-input-affix-wrapper .ant-input {
+  height: 38px !important;
+  line-height: 38px !important;
+  font-size: 20px !important;
 }
 
 .elder-mode .ant-autocomplete {
@@ -380,6 +429,11 @@ body {
   font-size: 16px !important;
 }
 
+/* 表单辅助提示文字（行内 fontSize 在关爱版下不会被 antd 类规则覆盖，需单独放大） */
+.elder-mode .form-hint {
+  font-size: 16px !important;
+}
+
 /* 订单高亮行样式 */
 .highlight-row {
   background-color: #e6f7ff !important;
@@ -393,4 +447,40 @@ body {
 @keyframes highlightPulse {
   0% { background-color: #1890ff; }
   100% { background-color: #e6f7ff; }
+}
+
+/* 关爱版：收款弹框内 InputNumber 默认无高度规则，导致与 Select(41px)/Input(41px) 高度、字号不一致。
+   仅作用于 .payment-modal，把金额输入框对齐到 41px / 18px，不影响表格里 size=small 的数字框 */
+.elder-mode .payment-modal .ant-input-number,
+.elder-mode .payment-modal .ant-input-number-affix-wrapper {
+  height: 41px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  font-size: 18px !important;
+}
+
+.elder-mode .payment-modal .ant-input-number-affix-wrapper .ant-input-number {
+  height: auto !important;
+}
+
+.elder-mode .payment-modal .ant-input-number-input {
+  height: 39px !important;
+  line-height: 39px !important;
+  font-size: 18px !important;
+}
+
+.elder-mode .payment-modal .ant-input-number-prefix {
+  font-size: 18px !important;
+}
+
+/* 关爱版：收款弹框内统一 Select / Input 高度与字号，确保三类控件一致 */
+.elder-mode .payment-modal .ant-select-single .ant-select-selector {
+  height: 41px !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+.elder-mode .payment-modal .ant-select-selection-item,
+.elder-mode .payment-modal .ant-input {
+  font-size: 18px !important;
 }

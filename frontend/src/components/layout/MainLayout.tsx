@@ -1,18 +1,19 @@
 import { Outlet, Navigate } from 'react-router-dom'
-import { Layout, Menu, Button, Tooltip } from 'antd'
+import { Layout, Menu, Button, Tooltip, Avatar } from 'antd'
 import {
   DashboardOutlined,
   ShopOutlined,
   ShoppingCartOutlined,
   BarChartOutlined,
   SettingOutlined,
-  ShopTwoTone,
   EyeOutlined,
   EyeInvisibleOutlined,
   FormOutlined,
   LockOutlined,
   UnlockOutlined,
   ImportOutlined,
+  UserOutlined,
+  PoweroffOutlined,
 } from '@ant-design/icons'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useEffect } from 'react'
@@ -53,7 +54,8 @@ const menuItems = [
     children: [
       { key: '/sales/customers', label: '客户管理' },
       { key: '/sales/orders', label: '订单列表' },
-      { key: '/sales/dispatch', label: '派工单' },
+      // 派工单暂时隐藏（仅需销售功能），代码保留，恢复时取消注释即可
+      // { key: '/sales/dispatch', label: '派工单' },
     ],
   },
   {
@@ -128,10 +130,14 @@ export default function MainLayout() {
     <Layout className={`${styles.layout} ${isElderMode ? 'elder-mode' : ''}`}>
       <Sider width={220} className={styles.sider}>
         <div className={styles.logo}>
-          <ShopTwoTone style={{ fontSize: 24 }} />
-          <span>亚星电子</span>
+          <span className={styles.logoMark}>亚</span>
+          <span className={styles.logoText}>
+            <span className={styles.logoName}>亚星电子</span>
+            <span className={styles.logoEn}>YAXING ELECTRONICS</span>
+          </span>
         </div>
         <Menu
+          theme="dark"
           mode="inline"
           selectedKeys={getSelectedKeys()}
           defaultOpenKeys={getOpenKeys()}
@@ -140,10 +146,15 @@ export default function MainLayout() {
           className={styles.menu}
         />
       </Sider>
-      <Layout>
+      <Layout className={styles.innerLayout}>
         <Header className={styles.header}>
           <div className={styles.headerLeft}>
-            <span className={styles.title}>亚星电子销售管理系统</span>
+            <span className={styles.titleBar} />
+            <span className={styles.title}>
+              <span className={styles.titleBrand}>亚星电子</span>
+              <span className={styles.titleSep} />
+              <span className={styles.titleSub}>销售管理系统</span>
+            </span>
           </div>
           <div className={styles.headerRight}>
             <Tooltip title={isPrivacyMode ? '显示敏感信息（复盘模式）' : '隐藏敏感信息（客户在场）'}>
@@ -167,8 +178,21 @@ export default function MainLayout() {
                 {isElderMode ? '标准版' : '关爱版'}
               </Button>
             </Tooltip>
-            <span className={styles.user}>管理员</span>
-            <a onClick={handleLogout}>退出</a>
+            <span className={styles.headerDivider} />
+            <div className={styles.userBox}>
+              <Avatar size={32} className={styles.avatar} icon={<UserOutlined />} />
+              <span className={styles.user}>管理员</span>
+            </div>
+            <Tooltip title="退出登录">
+              <Button
+                type="text"
+                icon={<PoweroffOutlined />}
+                onClick={handleLogout}
+                className={styles.logoutBtn}
+              >
+                退出
+              </Button>
+            </Tooltip>
           </div>
         </Header>
         <Content className={styles.content}>

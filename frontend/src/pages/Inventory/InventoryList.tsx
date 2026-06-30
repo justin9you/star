@@ -97,7 +97,7 @@ export default function InventoryList() {
             placeholder="搜索商品名称"
             onSearch={setKeyword}
             allowClear
-            style={{ width: 200 }}
+            style={{ width: 420 }}
           />
           <Select
             placeholder="选择仓库"
@@ -135,7 +135,6 @@ export default function InventoryList() {
         dataSource={inventory}
         rowKey="id"
         loading={loading}
-        scroll={{ x: 600 }}
         pagination={{
           current: page,
           total,
